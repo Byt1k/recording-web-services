@@ -93,11 +93,10 @@ h2 {
   padding: 20px;
   box-shadow: 0px 4px 19px rgba(0, 0, 0, 0.03);
   border-radius: 10px;
-  
-  
+
+
   &__audio {
-    padding: 10px;
-    background-color: #F0F2FE;
+    border-radius: 6px;
   }
 
   &__control {
@@ -110,6 +109,10 @@ h2 {
       display: flex;
       align-items: center;
       gap: 15px;
+
+      > img {
+        cursor: pointer;
+      }
     }
 
     .right {
