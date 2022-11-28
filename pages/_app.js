@@ -1,5 +1,5 @@
 import '../styles/_zeroing.scss'
-import '../styles/main.scss'
+import '../styles/global.scss'
 
 export default function MyApp({ Component, pageProps }) {
     return <Component {...pageProps} />

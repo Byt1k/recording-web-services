@@ -1,0 +1,53 @@
+@import "common.module";
+
+.header {
+  background-color: #fff;
+  box-shadow: 0px 3px 12px rgba(65, 57, 203, 0.11);
+  padding: 15px 0;
+
+  .container {
+    display: flex;
+    align-items: center;
+  }
+
+  //
+  &__user {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-left: 30px;
+    cursor: pointer;
+  }
+  //
+
+  &__menu {
+    display: flex;
+    gap: 43px;
+    margin-left: 85px;
+    color: #646363;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  &__action {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+
+    &__reset {
+      @extend %btnOutline;
+      border: 1px solid #FFDFDF;
+      color: #FF8A8A;
+      width: 145px;
+    }
+
+    &__find {
+      @extend %btnFill;
+      width: 145px;
+    }
+  }
+}
