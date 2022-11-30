@@ -3,7 +3,6 @@ import Select from 'react-select'
 import styles from '../styles/common.module.scss'
 
 import dynamic from 'next/dynamic'
-import {parseBody} from "next/dist/server/api-utils/node";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -50,8 +49,8 @@ const Index = () => {
                     <div className={`${styles.main__item} ${styles.main__item_50p}`}>
                         <h3>Временной диапазон</h3>
                         <div>
-                            <input type="date" placeholder='Выберите дату начала'/>
-                            <input type="date" placeholder='Выберите дату конца'/>
+                            <input type="datetime-local" placeholder='От'/>
+                            <input type="datetime-local" placeholder='До'/>
                         </div>
                     </div>
                     <div className={`${styles.main__item} ${styles.main__item_50p}`}>
@@ -65,6 +64,7 @@ const Index = () => {
                         <h3>Информация по взаимодействию </h3>
                         <div>
                             <Select options={[
+                                {value: 0, label: 'Все медиаканалы'},
                                 {value: 1, label: '1'},
                                 {value: 2, label: '2'},
                                 {value: 3, label: '3'}
@@ -76,6 +76,7 @@ const Index = () => {
                             />
                             <input type="text" placeholder='Проект'/>
                             <Select options={[
+                                {value: 0, label: 'Все направления'},
                                 {value: 1, label: '1'},
                                 {value: 2, label: '2'},
                                 {value: 3, label: '3'}
