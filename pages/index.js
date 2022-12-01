@@ -36,7 +36,7 @@ const Index = () => {
 
     return (
         <>
-            <Header/>
+            <Header isAuth={true}/>
             <div className={styles.container}>
                 <Player/>
                 <main className={styles.main}>
