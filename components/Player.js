@@ -100,6 +100,7 @@ const Player = () => {
                                 {value: 1.5, label: '1.5x'},
                                 {value: 2, label: '2x'}
                             ]}
+                            instanceId="speed"
                             defaultValue={{value: 1, label: '1x'}}
                             styles={{
                                 control: () => ({

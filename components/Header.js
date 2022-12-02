@@ -1,8 +1,7 @@
 import Link from "next/link";
 import styles from "../styles/header.module.scss"
 import {useEffect, useRef, useState} from "react"
-import Modal from "./Modal/Modal";
-import NegativeModal from "./Modal/NegativeModal";
+import Modal from "./Modal";
 
 const Header = ({isAuth, isFiltersPage = false}) => {
     const [exitIsActive, setExitIsActive] = useState(false)
@@ -76,19 +75,21 @@ const Header = ({isAuth, isFiltersPage = false}) => {
                     </>}
                 </div>
             </header>
-            <Modal active={popupExit} setActive={setPopupExit}>
-                <NegativeModal title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
-                               confirmText='Выйти' cancel={() => setPopupExit(false)}
-                               confirm={() => {
-                               }}/>
-
+            <Modal active={popupExit}
+                   setActive={setPopupExit}
+                   title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
+                   confirmText='Выйти' cancel={() => setPopupExit(false)}
+                   confirm={() => {}}
+                    isNegative={true}
+            >
             </Modal>
-            <Modal active={popupResetFilter} setActive={setPopupResetFilter}>
-                <NegativeModal title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
-                               confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
-                               confirm={() => {
-                               }}/>
-
+            <Modal active={popupResetFilter}
+                   setActive={setPopupResetFilter}
+                   title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
+                   confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
+                   confirm={() => {}}
+                    isNegative={true}
+            >
             </Modal>
         </>
     );

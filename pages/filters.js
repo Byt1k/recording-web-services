@@ -1,6 +1,6 @@
 import styles from '../styles/filters.module.scss'
 import Header from "../components/Header";
-import {useState} from "react";
+import RadioBtn from "../components/RadioBtn";
 
 const Filters = () => {
     const filters = [
@@ -183,8 +183,7 @@ const Filters = () => {
                         return (
                             <tr key={f.id}>
                                 <td>
-                                    <input type="radio" name="filter" id={f.id}/>
-                                    <label htmlFor={f.id} />
+                                    <input type="radio" name="filter"/>
                                 </td>
                                 <td>{f.id}</td>
                                 <td>{f.datetime  || "—"}</td>
