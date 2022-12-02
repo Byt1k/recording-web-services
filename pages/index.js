@@ -3,6 +3,7 @@ import Select from 'react-select'
 import styles from '../styles/common.module.scss'
 
 import dynamic from 'next/dynamic'
+import Link from "next/link";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -44,7 +45,7 @@ const Index = () => {
                         <h2>Поиск записей</h2>
                         <button className={styles.saveFilter}>Сохранить фильтр</button>
                         <button className={styles.selectColumn}>Выбор столбцов</button>
-                        <button className={styles.selectFilter}>Выбрать фильтр</button>
+                        <Link href="/filters" className={styles.selectFilter}>Выбрать фильтр</Link>
                     </div>
                     <div className={`${styles.main__item} ${styles.main__item_50p}`}>
                         <h3>Временной диапазон</h3>

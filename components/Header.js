@@ -4,7 +4,7 @@ import {useEffect, useRef, useState} from "react"
 import Modal from "./Modal/Modal";
 import NegativeModal from "./Modal/NegativeModal";
 
-const Header = ({isAuth}) => {
+const Header = ({isAuth, isFiltersPage = false}) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const [popupExit, setPopupExit] = useState(false)
@@ -53,19 +53,25 @@ const Header = ({isAuth}) => {
                             </div>}
                         </div>
                         <nav className={styles.header__menu}>
-                            <Link href='/search'>Поиск записей</Link>
+                            <Link href='/'>Поиск записей</Link>
                             <Link href='/list'>Список записей</Link>
                             <Link href='/ref'>Справка</Link>
                         </nav>
                         <div className={styles.header__action}>
-                            <button className={styles.header__action__reset} onClick={() => setPopupResetFilter(true)}>
-                                <img src="/reset.svg" alt="reset"/>
-                                Сбросить
-                            </button>
-                            <button className={styles.header__action__find}>
-                                <img src="/find.svg" alt="find"/>
-                                Найти
-                            </button>
+                            {!isFiltersPage
+                                ? <>
+                                    <button className={styles.header__action__reset}
+                                            onClick={() => setPopupResetFilter(true)}>
+                                        <img src="/reset.svg" alt="reset"/>
+                                        Сбросить
+                                    </button>
+                                    <button className={styles.header__action__find}>
+                                        <img src="/find.svg" alt="find"/>
+                                        Найти
+                                    </button>
+                                </>
+                                : <button className={styles.header__action__find}>Выбрать фильтр</button>}
+
                         </div>
                     </>}
                 </div>
