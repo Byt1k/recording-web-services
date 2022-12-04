@@ -1,7 +1,12 @@
 import Header from "../components/Header";
 import styles from "../styles/common.module.scss";
-import Player from "../components/Player";
 import ListRecords from "../components/ListRecords";
+import dynamic from "next/dynamic";
+
+const Player = dynamic(
+    () => import('../components/Player'),
+    {ssr: false}
+)
 
 const List = () => {
     return (
