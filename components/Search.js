@@ -44,6 +44,7 @@ const Search = () => {
     return (
         <>
             <main className={styles.main}>
+                {/*todo: component}*/}
                 <div className={`${styles.main__title} ${styles.main__item}`}>
                     <h2>Поиск записей</h2>
                     <button className={styles.saveFilter}
@@ -54,6 +55,7 @@ const Search = () => {
                     </button>
                     <Link href="/filters" className={styles.selectFilter}>Выбрать фильтр</Link>
                 </div>
+
                 <div className={`${styles.main__item} ${styles.main__item_50p}`}>
                     <h3>Временной диапазон</h3>
                     <div>

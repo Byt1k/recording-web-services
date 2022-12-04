@@ -3,7 +3,11 @@ import styles from "../styles/header.module.scss"
 import {useEffect, useRef, useState} from "react"
 import Modal from "./Modal";
 
-const Header = ({isAuth, isFiltersPage = false}) => {
+const Header = ({
+                    isAuth = false,
+                    isFiltersPage = false,
+                    isSearchAction = false
+                }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const [popupExit, setPopupExit] = useState(false)
@@ -16,11 +20,9 @@ const Header = ({isAuth, isFiltersPage = false}) => {
         if (!exitIsActive) return
 
         const handleClickOutside = (e) => {
-            // if (e.target != exitModalRef.current) {
             if (!exitModalBtnRef.current.contains(e.target)) {
                 setExitIsActive(false)
             }
-            // }
         }
 
         document.addEventListener('click', handleClickOutside)
@@ -56,23 +58,21 @@ const Header = ({isAuth, isFiltersPage = false}) => {
                             <Link href='/list'>Список записей</Link>
                             <Link href='/ref'>Справка</Link>
                         </nav>
-                        <div className={styles.header__action}>
-                            {!isFiltersPage
-                                ? <>
-                                    <button className={styles.header__action__reset}
-                                            onClick={() => setPopupResetFilter(true)}>
-                                        <img src="/reset.svg" alt="reset"/>
-                                        Сбросить
-                                    </button>
-                                    <button className={styles.header__action__find}>
-                                        <img src="/find.svg" alt="find"/>
-                                        Найти
-                                    </button>
-                                </>
-                                : <button className={styles.header__action__find}>Выбрать фильтр</button>}
-
-                        </div>
                     </>}
+                    <div className={styles.header__action}>
+                        {isSearchAction && <>
+                            <button className={styles.header__action__reset}
+                                    onClick={() => setPopupResetFilter(true)}>
+                                <img src="/reset.svg" alt="reset"/>
+                                Сбросить
+                            </button>
+                            <button className={styles.header__action__find}>
+                                <img src="/find.svg" alt="find"/>
+                                Найти
+                            </button>
+                        </>}
+                        {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
+                    </div>
                 </div>
             </header>
             <Modal active={popupExit}
@@ -80,7 +80,7 @@ const Header = ({isAuth, isFiltersPage = false}) => {
                    title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
                    confirmText='Выйти' cancel={() => setPopupExit(false)}
                    confirm={() => {}}
-                    isNegative={true}
+                   isNegative={true}
             >
             </Modal>
             <Modal active={popupResetFilter}
@@ -88,7 +88,7 @@ const Header = ({isAuth, isFiltersPage = false}) => {
                    title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
                    confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
                    confirm={() => {}}
-                    isNegative={true}
+                   isNegative={true}
             >
             </Modal>
         </>

@@ -1,6 +1,5 @@
 import styles from '../styles/filters.module.scss'
 import Header from "../components/Header";
-import RadioBtn from "../components/RadioBtn";
 
 const Filters = () => {
     const filters = [
@@ -142,11 +141,11 @@ const Filters = () => {
             <div className={`${styles.filtersPage} ${styles.container}`}>
                 <h2>Сохраненные фильтры</h2>
                 <table className={styles.filters}>
-                    <tbody>
-                    <tr className={styles.filters__title}>
+                    <thead>
+                    <tr>
                         <td></td>
                         <td>
-                            <button className={styles.sorted}>№</button>
+                            <button className="sorted">№</button>
                         </td>
                         <td>
                             <button>Дата и время</button>
@@ -179,6 +178,8 @@ const Filters = () => {
                             <button>Длительность</button>
                         </td>
                     </tr>
+                    </thead>
+                    <tbody>
                     {filters.map(f => {
                         return (
                             <tr key={f.id}>
@@ -186,16 +187,16 @@ const Filters = () => {
                                     <input type="radio" name="filter"/>
                                 </td>
                                 <td>{f.id}</td>
-                                <td>{f.datetime  || "—"}</td>
-                                <td>{f.name  || "—"}</td>
-                                <td>{f.type  || "—"}</td>
-                                <td>{f.agent  || "—"}</td>
-                                <td>{f.mediaChanel  || "—"}</td>
-                                <td>{f.callFromNumber  || "—"}</td>
-                                <td>{f.callToNumber  || "—"}</td>
-                                <td>{f.source  || "—"}</td>
-                                <td>{f.direction  || "—"}</td>
-                                <td>{f.duration  || "—"}</td>
+                                <td>{f.datetime || "—"}</td>
+                                <td>{f.name || "—"}</td>
+                                <td>{f.type || "—"}</td>
+                                <td>{f.agent || "—"}</td>
+                                <td>{f.mediaChanel || "—"}</td>
+                                <td>{f.callFromNumber || "—"}</td>
+                                <td>{f.callToNumber || "—"}</td>
+                                <td>{f.source || "—"}</td>
+                                <td>{f.direction || "—"}</td>
+                                <td>{f.duration || "—"}</td>
                             </tr>
                         )
                     })}

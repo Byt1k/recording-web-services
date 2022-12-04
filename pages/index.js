@@ -11,7 +11,7 @@ const Player = dynamic(
 const Index = () => {
     return (
         <>
-            <Header isAuth={true}/>
+            <Header isAuth={true} isSearchAction={true}/>
             <div className={styles.container}>
                 <Player/>
                 <Search/>
