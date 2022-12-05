@@ -6,12 +6,14 @@ import Modal from "./Modal";
 const Header = ({
                     isAuth = false,
                     isFiltersPage = false,
-                    isSearchAction = false
+                    isSearchAction = false,
+                    isInteraction = false
                 }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const [popupExit, setPopupExit] = useState(false)
     const [popupResetFilter, setPopupResetFilter] = useState(false)
+    const [popupDelete, setPopupDelete] = useState(false)
 
     const exitModalRef = useRef(null)
     const exitModalBtnRef = useRef(null)
@@ -72,6 +74,11 @@ const Header = ({
                             </button>
                         </>}
                         {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
+                        {isInteraction && <button className={styles.header__action__reset}
+                                                  onClick={() => setPopupDelete(true)}>
+                            <img src="/reset.svg" alt="reset"/>
+                            Удалить запись
+                        </button>}
                     </div>
                 </div>
             </header>
@@ -79,18 +86,26 @@ const Header = ({
                    setActive={setPopupExit}
                    title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
                    confirmText='Выйти' cancel={() => setPopupExit(false)}
-                   confirm={() => {}}
+                   confirm={() => {
+                   }}
                    isNegative={true}
-            >
-            </Modal>
+            />
             <Modal active={popupResetFilter}
                    setActive={setPopupResetFilter}
                    title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
                    confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
-                   confirm={() => {}}
+                   confirm={() => {
+                   }}
                    isNegative={true}
-            >
-            </Modal>
+            />
+            <Modal active={popupDelete}
+                   setActive={setPopupDelete}
+                   title='Удалить запись?' text='Вы хотите удалить текущую запись.' cancelText='Отменить'
+                   confirmText='Удалить' cancel={() => setPopupDelete(false)}
+                   confirm={() => {
+                   }}
+                   isNegative={true}
+            />
         </>
     );
 };

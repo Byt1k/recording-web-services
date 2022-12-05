@@ -1,5 +1,6 @@
 import styles from '../styles/listRecords.module.scss'
 import {useState} from "react";
+import Link from "next/link";
 
 const ListRecords = () => {
 
@@ -232,7 +233,7 @@ const ListRecords = () => {
                     <button>100</button>
                 </div>
                 <div className={styles.title__actions}>
-                    <button className={styles.interaction}>Взаимодействие</button>
+                    <Link href="/interaction" className={styles.interaction}>Взаимодействие</Link>
                     <button className={styles.selectColumn}>Выбор столбцов</button>
                     <button className={styles.selectFilter}>
                         <span className={styles.selectFilter__count}>5</span>
