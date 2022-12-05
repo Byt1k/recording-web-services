@@ -11,7 +11,9 @@ const Login = () => {
     const [passwordIsVisible, setPasswordIsVisible] = useState(false)
     const {register, handleSubmit, formState: {errors}} = useForm();
 
-    const onSubmit = data => console.log(data);
+    const onSubmit = data => {
+        console.log(data);
+    }
 
     return (
         <>

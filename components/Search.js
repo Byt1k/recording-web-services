@@ -57,6 +57,10 @@ const Search = () => {
         ])
     }
 
+    const [inputDateFromColor, setInputDateFromColor] = useState("#C8C8C8")
+    const [inputDateToColor, setInputDateToColor] = useState("#C8C8C8")
+
+
     return (
         <>
             <TitlePage title="Поиск записей" isSearch={true}/>
@@ -64,8 +68,16 @@ const Search = () => {
                 <div className={`${styles.main__item} ${styles.main__item_50p}`}>
                     <h3>Временной диапазон</h3>
                     <div>
-                        <input type="datetime-local" placeholder='От'/>
-                        <input type="datetime-local" placeholder='До'/>
+                        <input type="datetime-local"
+                               style={{color: inputDateFromColor}}
+                               onChange={(e) => (
+                                   setInputDateFromColor(e.target.value ? "#000" : "#C8C8C8")
+                               )}/>
+                        <input type="datetime-local"
+                               style={{color: inputDateToColor}}
+                               onChange={(e) => (
+                                   setInputDateToColor(e.target.value ? "#000" : "#C8C8C8")
+                               )}/>
                     </div>
                 </div>
                 <div className={`${styles.main__item} ${styles.main__item_50p}`}>
