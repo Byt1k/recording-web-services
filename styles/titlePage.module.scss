@@ -1,0 +1,155 @@
+@import "common.module";
+
+.title {
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+
+  &__count {
+    display: flex;
+    align-items: center;
+    margin-left: 37px;
+    font-size: 10px;
+    gap: 10px;
+
+    button {
+      font-size: inherit;
+      color: #3F73F3;
+      text-decoration: underline;
+
+      &.active {
+        font-weight: 700;
+      }
+    }
+
+  }
+
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    &__btn {
+      &_fill {
+        @extend %btnFill;
+        background-color: #fff;
+        color: #000;
+        border: 0;
+        box-shadow: 0px 4px 19px rgba(0, 0, 0, 0.06);
+
+        .count {
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background-color: #4460F0;
+          color: #fff;
+          font-size: 9px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+      }
+
+      &_outline {
+        @extend %btnOutline;
+      }
+    }
+  }
+}
+
+.selectColumnsForm {
+  .wrapper {
+    background-color: #FFFFFF;
+    width: 100%;
+    max-height: 350px;
+    box-shadow: 0px 3px 14px rgba(0, 0, 0, 0.03);
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+
+  &__columns {
+    max-height: 330px;
+    overflow: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: 28px;
+
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+      background-color: #F2F2F2;
+      border-radius: 9em;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #4460F0;
+      border-radius: 9em;
+    }
+
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #2C2B24;
+      cursor: pointer;
+      width: auto;
+
+      input {
+        width: 15px;
+        height: 15px;
+      }
+    }
+  }
+}
+
+.saveFilterForm {
+  &__field {
+    &:nth-child(2) {
+      margin: 20px 0 35px 0;
+    }
+
+    p {
+      font-weight: 600;
+      font-size: 14px;
+      line-height: 17px;
+      color: #7F8493;
+      margin-bottom: 10px;
+    }
+
+    input[type="text"] {
+      background-color: #FFFFFF;
+      border: 2px solid #EEEDF0;
+      border-radius: 9px;
+      padding: 0 12px;
+      width: 410px;
+      height: 43px;
+
+      &::placeholder {
+        color: #C8C8C8;
+      }
+    }
+
+    &__types {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      > label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-top: 4px;
+      }
+    }
+  }
+}

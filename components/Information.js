@@ -1,19 +1,11 @@
-import stylesTitle from "../styles/listRecords.module.scss";
-import Link from "next/link";
 import styles from '../styles/information.module.scss'
+import TitlePage from "./TitlePage";
 
 
 const Information = () => {
     return (
         <>
-            <div className={stylesTitle.title}>
-                <h2>Информация по взаимодействию</h2>
-                <div className={stylesTitle.title__actions}>
-                    <Link href="/interaction" className={stylesTitle.interaction}>Взаимодействие</Link>
-                    <button className={stylesTitle.selectColumn}>Выбор столбцов</button>
-                    <button className={stylesTitle.selectFilter}>Фильтр</button>
-                </div>
-            </div>
+            <TitlePage title="Информация по взаимодействию" isInteraction={true}/>
             <div className={styles.block}>
                 <h2>Временной диапазон</h2>
                 <div className={styles.block__item}>

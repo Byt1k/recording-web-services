@@ -4,9 +4,14 @@
   tbody {
     tr {
       transition: all .3s ease;
+      cursor: pointer;
 
       &:hover {
         background-color: #D9E0FF;
+      }
+
+      &.active {
+        background-color: rgba(255, 138, 138, 0.35);
       }
 
       td {
@@ -34,67 +39,11 @@
   box-shadow: 0 -5px 5px -3px rgb(0 0 0 / 12%)
 }
 
-.title {
-  margin: 30px 0 15px 0;
-  display: flex;
-  align-items: center;
-
-  .count {
-    display: flex;
-    align-items: center;
-    margin-left: 37px;
-    font-size: 10px;
-    gap: 10px;
-
-    button {
-      font-size: inherit;
-      color: #3F73F3;
-      text-decoration: underline;
-
-      &.active {
-        font-weight: 700;
-      }
-    }
-
-  }
-
-  &__actions {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-
-    .interaction, .selectColumn {
-      @extend %btnOutline;
-    }
-
-    .selectFilter {
-      @extend %btnFill;
-      background-color: #fff;
-      color: #000;
-      border: 0;
-      box-shadow: 0px 4px 19px rgba(0, 0, 0, 0.06);
-
-      &__count {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background-color: #4460F0;
-        color: #fff;
-        font-size: 9px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-    }
-  }
-}
-
 .info {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 30px;
+  margin-top: 12px;
 
   .shown {
     font-size: 13px;

@@ -1,6 +1,6 @@
 import styles from '../styles/listRecords.module.scss'
 import {useState} from "react";
-import Link from "next/link";
+import TitlePage from "./TitlePage";
 
 const ListRecords = () => {
 
@@ -18,7 +18,7 @@ const ListRecords = () => {
             duration: "01:19",
             dependencies: [
                 {
-                    id: "01U8HVJSP090LFBR1C50K2LAES02ANMH",
+                    id: "10U8HVJSP090LFBR1C50K2LAES02ANMH",
                     number: "1.1",
                     datetime: "2022-09-12 15:35:05",
                     mediaChanel: "Взаимодействие",
@@ -30,7 +30,7 @@ const ListRecords = () => {
                     duration: "01:19"
                 },
                 {
-                    id: "02U8HVJSP090LFBR1C50K2LAES02ANMH",
+                    id: "20U8HVJSP090LFBR1C50K2LAES02ANMH",
                     number: "1.2",
                     datetime: "2022-09-12 15:35:05",
                     mediaChanel: "Взаимодействие",
@@ -221,26 +221,15 @@ const ListRecords = () => {
         ))
     };
 
+    const [selectedTrackId, setSelectedTrackId] = useState(null)
+
+    const trackIsActive = (track, className) => selectedTrackId !== track.id
+        ? `${className}`
+        : `${className} ${styles.active}`
+
     return (
         <>
-            <div className={styles.title}>
-                <h2>Список записей</h2>
-                <div className={styles.count}>
-                    <p>Записей на странице</p>
-                    <button className={styles.active}>10</button>
-                    <button>25</button>
-                    <button>50</button>
-                    <button>100</button>
-                </div>
-                <div className={styles.title__actions}>
-                    <Link href="/interaction" className={styles.interaction}>Взаимодействие</Link>
-                    <button className={styles.selectColumn}>Выбор столбцов</button>
-                    <button className={styles.selectFilter}>
-                        <span className={styles.selectFilter__count}>5</span>
-                        Фильтр
-                    </button>
-                </div>
-            </div>
+            <TitlePage isListRecordsPage={true} title="Список записей"/>
             <table className={styles.list}>
                 <thead>
                 <tr>
@@ -281,20 +270,25 @@ const ListRecords = () => {
                 {data.map(r => {
 
                     return <>
-                        <tr key={r.number} className={styles.list__record}>
+                        <tr key={r.number}
+                            className={trackIsActive(r, styles.list__record)}
+                            onClick={() => setSelectedTrackId(r.id)}
+                        >
                             <td>
                                 {r.dependencies.length
                                     ? <img
                                         src="/records-arrow.svg"
                                         alt=""
-                                        onClick={() => changeVisibleDependencies(r)}
+                                        onClick={(e) => {
+                                                e.stopPropagation()
+                                                changeVisibleDependencies(r)
+                                        }}
                                         style={visibleDependenciesId.some(id => id == r.id)
                                             ? {transform: 'rotate(180deg)'}
                                             : null
                                         }
                                     />
                                     : null}
-                                <input type="checkbox"/>
                                 <img src="/records-play.svg" alt="playPause"/>
                             </td>
                             <td>{r.number}</td>
@@ -310,9 +304,11 @@ const ListRecords = () => {
                         </tr>
                         {visibleDependenciesId.some(id => id == r.id) && r.dependencies.map(d => {
                             return (
-                                <tr key={d.number} className={styles.list__record_opened}>
+                                <tr key={d.number}
+                                    className={trackIsActive(d, styles.list__record_opened)}
+                                    onClick={() => setSelectedTrackId(d.id)}
+                                >
                                     <td>
-                                        <input type="checkbox"/>
                                         <img src="/records-play.svg" alt="playPause"/>
                                     </td>
                                     <td>{d.number}</td>
