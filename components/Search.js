@@ -38,7 +38,6 @@ const Search = () => {
     ])
 
     const onChangeAddParam = (id, param, payload) => {
-        console.log(id)
         setAdditionalParams(
             additionalParams.map(item => (
                 item.id === id ? {...item, [param]: payload } : item
@@ -57,9 +56,6 @@ const Search = () => {
             }
         ])
     }
-
-
-    // console.log(additionalParams)
 
     return (
         <>
@@ -140,14 +136,12 @@ const Search = () => {
                         return (
                             <div key={param.id} className={styles.additionalParam}>
                                 <input type="text"
-                                       name={"name" + param.id}
                                        placeholder='Введите параметр'
                                        className={styles.name}
                                        defaultValue={param.name}
                                        onChange={e => onChangeAddParam(param.id, 'name', e.target.value)}
                                 />
                                 <input type="text"
-                                       name={"value" + param.id}
                                        placeholder='Введите значение'
                                        className={styles.value}
                                        defaultValue={param.value}
@@ -155,7 +149,6 @@ const Search = () => {
                                 />
                                 <label className={styles.additionalParam__checkbox}>
                                     <input type="checkbox"
-                                           name={"isOn" + param.id}
                                            defaultChecked={!!param.isOn}
                                            onChange={e => onChangeAddParam(param.id, 'isOn', e.target.checked)}
                                     />
@@ -164,7 +157,7 @@ const Search = () => {
                             </div>
                         )
                     })}
-                    <button onClick={()=>AddAdditionalParam()} className={styles.addAdditionalParam}>+ Добавить</button>
+                    <button onClick={AddAdditionalParam} className={styles.addAdditionalParam}>+ Добавить</button>
                 </div>
             </main>
         </>
