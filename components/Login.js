@@ -1,18 +1,20 @@
-import Header from "../components/Header";
+import Header from "./Header";
 import styles from '../styles/login.module.scss'
 import {useForm} from "react-hook-form";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
-import {faEyeSlash} from "@fortawesome/free-regular-svg-icons";
-import {faEye} from "@fortawesome/free-regular-svg-icons";
+import {faEye, faEyeSlash} from "@fortawesome/free-regular-svg-icons";
 import {useState} from "react";
+import {useActions} from "../hooks/useActions";
 
 
 const Login = () => {
     const [passwordIsVisible, setPasswordIsVisible] = useState(false)
     const {register, handleSubmit, formState: {errors}} = useForm();
 
-    const onSubmit = data => {
-        console.log(data);
+    const {setAuthUserData} = useActions()
+
+    const onSubmit = async ({login, password}) => {
+        await setAuthUserData(login, password)
     }
 
     return (
@@ -57,3 +59,7 @@ const Login = () => {
 };
 
 export default Login;
+
+// export const getServerSideProps = wrapper.getServerSideProps(async ({store}) => {
+//     const dispatch = store.dispatch(await setAuthUserData())
+// })

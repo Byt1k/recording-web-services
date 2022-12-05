@@ -2,6 +2,8 @@ import Header from "../components/Header";
 import styles from '../styles/common.module.scss'
 import dynamic from 'next/dynamic'
 import Search from "../components/Search";
+import {useSelector} from "react-redux";
+import Login from "../components/Login";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -9,14 +11,21 @@ const Player = dynamic(
 )
 
 const Index = () => {
+
+    const {isAuth} = useSelector(state => state.auth)
+
+    console.log(isAuth)
+
     return (
-        <>
-            <Header isAuth={true} isSearchAction={true}/>
-            <div className={styles.container}>
-                <Player/>
-                <Search/>
-            </div>
-        </>
+        !isAuth
+            ? <Login />
+            : <>
+                <Header isAuth={isAuth} isSearchAction={true}/>
+                <div className={styles.container}>
+                    <Player/>
+                    <Search/>
+                </div>
+            </>
     );
 };
 
