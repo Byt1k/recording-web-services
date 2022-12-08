@@ -2,14 +2,19 @@ import Link from "next/link";
 import styles from "../styles/header.module.scss"
 import {useEffect, useRef, useState} from "react"
 import Modal from "./Modal";
+import {useAppDispatch, useAppSelector} from "../redux/hooks";
+import {selectAuthUserData, setAuthUserData} from "../redux/slices/auth";
+import {destroyCookie} from 'nookies'
+import Router from "next/router";
 
 const Header = ({
-                    isAuth = false,
                     isFiltersPage = false,
                     isSearchAction = false,
                     isInteraction = false
                 }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
+
+    const userData = useAppSelector(selectAuthUserData)
 
     const [popupExit, setPopupExit] = useState(false)
     const [popupResetFilter, setPopupResetFilter] = useState(false)
@@ -34,6 +39,14 @@ const Header = ({
         }
     }, [exitIsActive, setExitIsActive])
 
+    const dispatch = useAppDispatch()
+
+    const exit = async () => {
+        destroyCookie(null, "rwsAuthToken")
+        dispatch(setAuthUserData(""))
+        Router.replace('/login')
+    }
+
     return (
         <>
             <header className={styles.header}>
@@ -41,11 +54,11 @@ const Header = ({
                     <Link href='/'>
                         <img src='/logo.svg' alt="Logo"/>
                     </Link>
-                    {isAuth && <>
+                    {userData && <>
                         <div className={styles.header__user}>
                             <div ref={exitModalBtnRef} className={styles.header__user__current}
                                  onClick={() => setExitIsActive(v => !v)}>
-                                Носова Алина
+                                {`${userData.UserInfo[0].LastName} ${userData.UserInfo[0].FirstName}`}
                                 <img src="/header-arrow.svg" alt="arrow"
                                      className={exitIsActive ? styles.rotate : null}/>
                             </div>
@@ -86,8 +99,7 @@ const Header = ({
                    setActive={setPopupExit}
                    title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
                    confirmText='Выйти' cancel={() => setPopupExit(false)}
-                   confirm={() => {
-                   }}
+                   confirm={() => exit()}
                    isNegative={true}
             />
             <Modal active={popupResetFilter}

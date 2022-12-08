@@ -88,10 +88,21 @@
     }
 
     button[type="submit"] {
+      transition: all .3s ease;
       @extend %btnFill;
       width: 100%;
       height: 43px;
       font-size: 15px;
+
+      &[disabled] {
+        opacity: 0.5;
+      }
     }
   }
+}
+
+.error {
+  color: red;
+  margin-top: -5px;
+  margin-bottom: 15px;
 }
