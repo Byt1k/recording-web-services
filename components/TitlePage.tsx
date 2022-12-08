@@ -4,11 +4,20 @@ import {useState} from "react";
 import {Field, Form, Formik} from "formik";
 import Modal from "./Modal";
 
-const TitlePage = ({
+interface PropsType {
+    title: string,
+    isListRecordsPage?: boolean
+    isSearch?: boolean
+    isInteraction?: boolean
+    selectedTrackId?: string
+}
+
+const TitlePage: React.FC<PropsType> = ({
                        title,
                        isListRecordsPage = false,
                        isSearch = false,
-                       isInteraction = false
+                       isInteraction = false,
+                       selectedTrackId
                    }) => {
 
     const [popupSelectColumns, setPopupSelectColumns] = useState(false)
@@ -31,7 +40,8 @@ const TitlePage = ({
                     <button>100</button>
                 </div>}
                 {isListRecordsPage && <div className={styles.title__actions}>
-                    <Link href="/interaction" className={styles.title__actions__btn_outline}>Взаимодействие</Link>
+                    <Link href={`/list/${selectedTrackId}`}
+                          className={styles.title__actions__btn_outline}>Взаимодействие</Link>
                     <button
                         className={styles.title__actions__btn_outline}
                         onClick={() => setPopupSelectColumns(true)}
@@ -131,6 +141,7 @@ const TitlePage = ({
                    active={popupSaveFilter}
                    setActive={setPopupSaveFilter}
                    form={"saveFilterForm"}
+                   confirm={()=>{}}
             >
                 <Formik
                     initialValues={{

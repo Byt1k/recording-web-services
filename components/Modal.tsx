@@ -1,6 +1,20 @@
 import styles from '../styles/modal.module.scss'
 
-const Modal = ({
+interface PropsType {
+    active: boolean,
+    setActive: Function,
+    title: string,
+    text?: string,
+    cancelText: string,
+    form?: string,
+    confirmText: string,
+    cancel: () => void,
+    confirm?: () => void,
+    isNegative: boolean,
+    children?: any
+}
+
+const Modal: React.FC<PropsType> = ({
                    active,
                    setActive,
                    title,

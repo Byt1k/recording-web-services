@@ -1,217 +1,226 @@
 import styles from '../styles/listRecords.module.scss'
 import {useState} from "react";
 import TitlePage from "./TitlePage";
+import {useRouter} from "next/router";
+import {useAppSelector} from "../redux/hooks";
+import {selectSearchedRecordings} from "../redux/slices/recordings";
+import timeTransformer from "../utils/timeTrasformer";
 
 const ListRecords = () => {
 
-    const data = [
-        {
-            id: "00U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "1",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: [
-                {
-                    id: "10U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "1.1",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                },
-                {
-                    id: "20U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "1.2",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                }
-            ]
-        },
-        {
-            id: "01U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "2",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        },
-        {
-            id: "02U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "3",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        },
-        {
-            id: "03U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "4",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        },
-        {
-            id: "04U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "5",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: [
-                {
-                    id: "41U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "5.1",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                }
-            ]
-        },
-        {
-            id: "05U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "6",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: [
-                {
-                    id: "51U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "6.1",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                }
-            ]
-        },
-        {
-            id: "06U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "7",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        },
-        {
-            id: "07U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "8",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        },
-        {
-            id: "08U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "9",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: [
-                {
-                    id: "81U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "9.1",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                },
-                {
-                    id: "82U8HVJSP090LFBR1C50K2LAES02ANMH",
-                    number: "9.2",
-                    datetime: "2022-09-12 15:35:05",
-                    mediaChanel: "Взаимодействие",
-                    agent: "Красилова Елизавета",
-                    callFromNumber: "+79509439439",
-                    callToNumber: "+79509439439",
-                    source: "Черномырдин",
-                    direction: "Inbound",
-                    duration: "01:19"
-                }
-            ]
-        },
-        {
-            id: "09U8HVJSP090LFBR1C50K2LAES02ANMH",
-            number: "10",
-            datetime: "2022-09-12 15:35:05",
-            mediaChanel: "Взаимодействие",
-            agent: "Красилова Елизавета",
-            callFromNumber: "+79509439439",
-            callToNumber: "+79509439439",
-            source: "Черномырдин",
-            direction: "Inbound",
-            duration: "01:19",
-            dependencies: []
-        }
-    ]
+    // const data = [
+    //     {
+    //         id: "00U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "1",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: [
+    //             {
+    //                 id: "10U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "1.1",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             },
+    //             {
+    //                 id: "20U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "1.2",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             }
+    //         ]
+    //     },
+    //     {
+    //         id: "01U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "2",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     },
+    //     {
+    //         id: "02U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "3",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     },
+    //     {
+    //         id: "03U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "4",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     },
+    //     {
+    //         id: "04U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "5",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: [
+    //             {
+    //                 id: "41U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "5.1",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             }
+    //         ]
+    //     },
+    //     {
+    //         id: "05U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "6",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: [
+    //             {
+    //                 id: "51U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "6.1",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             }
+    //         ]
+    //     },
+    //     {
+    //         id: "06U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "7",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     },
+    //     {
+    //         id: "07U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "8",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     },
+    //     {
+    //         id: "08U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "9",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: [
+    //             {
+    //                 id: "81U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "9.1",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             },
+    //             {
+    //                 id: "82U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //                 number: "9.2",
+    //                 datetime: "2022-09-12 15:35:05",
+    //                 mediaChanel: "Взаимодействие",
+    //                 agent: "Красилова Елизавета",
+    //                 callFromNumber: "+79509439439",
+    //                 callToNumber: "+79509439439",
+    //                 source: "Черномырдин",
+    //                 direction: "Inbound",
+    //                 duration: "01:19"
+    //             }
+    //         ]
+    //     },
+    //     {
+    //         id: "09U8HVJSP090LFBR1C50K2LAES02ANMH",
+    //         number: "10",
+    //         datetime: "2022-09-12 15:35:05",
+    //         mediaChanel: "Взаимодействие",
+    //         agent: "Красилова Елизавета",
+    //         callFromNumber: "+79509439439",
+    //         callToNumber: "+79509439439",
+    //         source: "Черномырдин",
+    //         direction: "Inbound",
+    //         duration: "01:19",
+    //         dependencies: []
+    //     }
+    // ]
+
+    const {items: recordings} = useAppSelector(selectSearchedRecordings)
+
+    console.log(recordings)
+
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
 
     const changeVisibleDependencies = item => {
@@ -223,13 +232,13 @@ const ListRecords = () => {
 
     const [selectedTrackId, setSelectedTrackId] = useState(null)
 
-    const trackIsActive = (track, className) => selectedTrackId !== track.id
+    const trackIsActive = (track, className) => selectedTrackId !== track.recordid
         ? `${className}`
         : `${className} ${styles.active}`
 
     return (
         <>
-            <TitlePage isListRecordsPage={true} title="Список записей"/>
+            <TitlePage isListRecordsPage={true} title="Список записей" selectedTrackId={selectedTrackId}/>
             <table className={styles.list}>
                 <thead>
                 <tr>
@@ -267,21 +276,21 @@ const ListRecords = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {data.map(r => {
+                {recordings.map((r, index) => {
 
                     return <>
-                        <tr key={r.number}
+                        <tr key={r.recordid}
                             className={trackIsActive(r, styles.list__record)}
-                            onClick={() => setSelectedTrackId(r.id)}
+                            onClick={() => setSelectedTrackId(r.recordid)}
                         >
                             <td>
-                                {r.dependencies.length
-                                    ? <img
+                                {/*{r.dependencies.length*/
+                                     false ? <img
                                         src="/records-arrow.svg"
                                         alt=""
                                         onClick={(e) => {
-                                                e.stopPropagation()
-                                                changeVisibleDependencies(r)
+                                            e.stopPropagation()
+                                            changeVisibleDependencies(r)
                                         }}
                                         style={visibleDependenciesId.some(id => id == r.id)
                                             ? {transform: 'rotate(180deg)'}
@@ -291,39 +300,39 @@ const ListRecords = () => {
                                     : null}
                                 <img src="/records-play.svg" alt="playPause"/>
                             </td>
-                            <td>{r.number}</td>
-                            <td>{r.datetime}</td>
+                            <td>{index + 1}</td>
+                            <td>{r.starttime}</td>
                             <td>{r.mediaChanel}</td>
-                            <td>{r.agent}</td>
+                            <td>{r.username}</td>
                             <td>{r.callFromNumber}</td>
                             <td>{r.callToNumber}</td>
                             <td>{r.source}</td>
-                            <td>{r.direction}</td>
-                            <td>{r.duration}</td>
-                            <td>{r.id}</td>
+                            <td>{r.type}</td>
+                            <td>{timeTransformer(r.duration)}</td>
+                            <td>{r.callId}</td>
                         </tr>
-                        {visibleDependenciesId.some(id => id == r.id) && r.dependencies.map(d => {
-                            return (
-                                <tr key={d.number}
-                                    className={trackIsActive(d, styles.list__record_opened)}
-                                    onClick={() => setSelectedTrackId(d.id)}
-                                >
-                                    <td>
-                                        <img src="/records-play.svg" alt="playPause"/>
-                                    </td>
-                                    <td>{d.number}</td>
-                                    <td>{d.datetime}</td>
-                                    <td>{d.mediaChanel}</td>
-                                    <td>{d.agent}</td>
-                                    <td>{d.callFromNumber}</td>
-                                    <td>{d.callToNumber}</td>
-                                    <td>{d.source}</td>
-                                    <td>{d.direction}</td>
-                                    <td>{d.duration}</td>
-                                    <td>{d.id}</td>
-                                </tr>
-                            )
-                        })}
+                        {/*{visibleDependenciesId.some(id => id == r.id) && r.dependencies.map(d => {*/}
+                        {/*    return (*/}
+                        {/*        <tr key={d.number}*/}
+                        {/*            className={trackIsActive(d, styles.list__record_opened)}*/}
+                        {/*            onClick={() => setSelectedTrackId(d.id)}*/}
+                        {/*        >*/}
+                        {/*            <td>*/}
+                        {/*                <img src="/records-play.svg" alt="playPause"/>*/}
+                        {/*            </td>*/}
+                        {/*            <td>{d.number}</td>*/}
+                        {/*            <td>{d.datetime}</td>*/}
+                        {/*            <td>{d.mediaChanel}</td>*/}
+                        {/*            <td>{d.agent}</td>*/}
+                        {/*            <td>{d.callFromNumber}</td>*/}
+                        {/*            <td>{d.callToNumber}</td>*/}
+                        {/*            <td>{d.source}</td>*/}
+                        {/*            <td>{d.direction}</td>*/}
+                        {/*            <td>{d.duration}</td>*/}
+                        {/*            <td>{d.id}</td>*/}
+                        {/*        </tr>*/}
+                        {/*    )*/}
+                        {/*})}*/}
                     </>
                 })}
                 </tbody>

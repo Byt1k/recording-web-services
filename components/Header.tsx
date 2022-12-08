@@ -43,7 +43,7 @@ const Header = ({
 
     const exit = async () => {
         destroyCookie(null, "rwsAuthToken")
-        dispatch(setAuthUserData(""))
+        dispatch(setAuthUserData(null))
         Router.replace('/login')
     }
 
@@ -77,11 +77,12 @@ const Header = ({
                     <div className={styles.header__action}>
                         {isSearchAction && <>
                             <button className={styles.header__action__reset}
-                                    onClick={() => setPopupResetFilter(true)}>
+                                    onClick={() => setPopupResetFilter(true)}
+                            >
                                 <img src="/reset.svg" alt="reset"/>
                                 Сбросить
                             </button>
-                            <button className={styles.header__action__find}>
+                            <button className={styles.header__action__find} form="main-form" type="submit">
                                 <img src="/find.svg" alt="find"/>
                                 Найти
                             </button>
@@ -117,6 +118,7 @@ const Header = ({
                    confirm={() => {
                    }}
                    isNegative={true}
+                   form="main-form"
             />
         </>
     );

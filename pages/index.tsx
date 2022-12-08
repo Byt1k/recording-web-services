@@ -1,12 +1,13 @@
 import dynamic from 'next/dynamic'
 import styles from '../styles/common.module.scss'
 import Header from "../components/Header";
-import Search from "../components/Search"
+import Search from '../components/Search'
 
 const Player = dynamic(
     () => import('../components/Player'),
     {ssr: false}
 )
+
 
 const Index = () => {
 
@@ -14,8 +15,8 @@ const Index = () => {
         <>
             <Header isSearchAction={true}/>
             <div className={styles.container}>
-                <Player/>
-                <Search/>
+                <Player />
+                <Search />
             </div>
         </>
     )

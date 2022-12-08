@@ -39,3 +39,20 @@ export interface ResponseAuth {
     Capabilities: Capabilities[],
     BusinessAttributes: BusinessAttributes[]
 }
+
+export interface RecordingItem {
+    callId: string,
+    duration: number,
+    externalDN: string,
+    localDN: string,
+    metadata: Array<any>,
+    recordid: string,
+    starttime: string,
+    stoptime: string,
+    type: string,
+    username: string
+}
+
+export interface ResponseSearchRecordings {
+    items: RecordingItem[]
+}

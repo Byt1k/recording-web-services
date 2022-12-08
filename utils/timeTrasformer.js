@@ -10,11 +10,7 @@ const timeTransformer = (date) => {
         return value
     }
 
-    return {
-        hours: valueFormat(hours),
-        minutes: valueFormat(minutes),
-        seconds: valueFormat(seconds)
-    }
+    return `${valueFormat(hours)}:${valueFormat(minutes)}:${valueFormat(seconds)}`
 }
 
 export default timeTransformer

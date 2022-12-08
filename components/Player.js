@@ -45,13 +45,13 @@ const Player = () => {
 
         wavesurfer.current.on('ready', () => {
             setIsReady(true)
-            const {hours, seconds, minutes} = timeTransformer(wavesurfer.current.getDuration())
-            setDuration(`${hours}:${minutes}:${seconds}`)
+            const duration = timeTransformer(wavesurfer.current.getDuration())
+            setDuration(duration)
         })
 
         wavesurfer.current.on('audioprocess', () => {
-            const {hours, seconds, minutes} = timeTransformer(wavesurfer.current.getCurrentTime())
-            setCurrentTime(`${hours}:${minutes}:${seconds}`)
+            const currentTime = timeTransformer(wavesurfer.current.getCurrentTime())
+            setCurrentTime(currentTime)
         })
 
         wavesurfer.current.on('finish', stop)

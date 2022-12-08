@@ -1,10 +1,14 @@
 import {Action, configureStore, ThunkAction} from '@reduxjs/toolkit'
 import {createWrapper} from 'next-redux-wrapper';
 import {authReducer} from "./slices/auth";
+import {recordingsReducer} from "./slices/recordings";
 
 export function makeStore() {
     return configureStore({
-        reducer: { auth: authReducer },
+        reducer: {
+            auth: authReducer ,
+            recordings: recordingsReducer
+        }
     })
 }
 
