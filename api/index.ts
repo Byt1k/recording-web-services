@@ -14,7 +14,7 @@ export const Api = (ctx? : NextPageContext | GetServerSidePropsContext): ApiRetu
     const token = cookies.rwsAuthToken
 
     const instance = axios.create({
-        baseURL: 'http://95.165.29.71:8080/',
+        baseURL: 'https://95.165.29.71:8080/',
         headers: {
             Authorization: 'Bearer ' + token
         }
