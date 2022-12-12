@@ -1,4 +1,4 @@
-import {createAsyncThunk, createSlice, PayloadAction} from '@reduxjs/toolkit'
+import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {ResponseAuth} from "../../api/types";
 import {RootState} from "../store";
 import {HYDRATE} from "next-redux-wrapper";

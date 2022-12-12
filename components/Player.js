@@ -39,6 +39,7 @@ const Player = () => {
     useEffect(() => {
 
         // todo: api-request
+        // setTrack('http://192.168.1.200:8080/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
         setTrack('/middle.mp3')
 
         track && wavesurfer.current.load(track)

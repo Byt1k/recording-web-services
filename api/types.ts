@@ -56,3 +56,11 @@ export interface RecordingItem {
 export interface ResponseSearchRecordings {
     items: RecordingItem[]
 }
+
+interface RecordingDetail {
+
+}
+
+export interface ResponseRecordingDetail {
+    items: RecordingDetail[]
+}
