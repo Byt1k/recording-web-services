@@ -219,8 +219,6 @@ const ListRecords = () => {
 
     const {items: recordings} = useAppSelector(selectSearchedRecordings)
 
-    console.log(recordings)
-
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
 
     const changeVisibleDependencies = item => {
