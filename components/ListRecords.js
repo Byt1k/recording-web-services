@@ -1,242 +1,65 @@
+import React, {useEffect, useState} from 'react'
 import styles from '../styles/listRecords.module.scss'
-import {useState} from "react";
 import TitlePage from "./TitlePage";
-import {useRouter} from "next/router";
 import {useAppSelector} from "../redux/hooks";
 import {selectSearchedRecordings} from "../redux/slices/recordings";
 import timeTransformer from "../utils/timeTrasformer";
+import dateToString from "../utils/dateToString";
+import Pagination from "./Pagination";
 
 const ListRecords = () => {
 
-    // const data = [
-    //     {
-    //         id: "00U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "1",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: [
-    //             {
-    //                 id: "10U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "1.1",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             },
-    //             {
-    //                 id: "20U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "1.2",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         id: "01U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "2",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     },
-    //     {
-    //         id: "02U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "3",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     },
-    //     {
-    //         id: "03U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "4",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     },
-    //     {
-    //         id: "04U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "5",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: [
-    //             {
-    //                 id: "41U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "5.1",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         id: "05U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "6",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: [
-    //             {
-    //                 id: "51U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "6.1",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         id: "06U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "7",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     },
-    //     {
-    //         id: "07U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "8",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     },
-    //     {
-    //         id: "08U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "9",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: [
-    //             {
-    //                 id: "81U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "9.1",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             },
-    //             {
-    //                 id: "82U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //                 number: "9.2",
-    //                 datetime: "2022-09-12 15:35:05",
-    //                 mediaChanel: "Взаимодействие",
-    //                 agent: "Красилова Елизавета",
-    //                 callFromNumber: "+79509439439",
-    //                 callToNumber: "+79509439439",
-    //                 source: "Черномырдин",
-    //                 direction: "Inbound",
-    //                 duration: "01:19"
-    //             }
-    //         ]
-    //     },
-    //     {
-    //         id: "09U8HVJSP090LFBR1C50K2LAES02ANMH",
-    //         number: "10",
-    //         datetime: "2022-09-12 15:35:05",
-    //         mediaChanel: "Взаимодействие",
-    //         agent: "Красилова Елизавета",
-    //         callFromNumber: "+79509439439",
-    //         callToNumber: "+79509439439",
-    //         source: "Черномырдин",
-    //         direction: "Inbound",
-    //         duration: "01:19",
-    //         dependencies: []
-    //     }
-    // ]
+    let {items: recordings} = useAppSelector(selectSearchedRecordings)
 
-    const {items: recordings} = useAppSelector(selectSearchedRecordings)
+    if (recordings.length) {
+        window.localStorage.setItem('recordings', JSON.stringify(recordings));
+    }
+
+    recordings = JSON.parse(window.localStorage.getItem('recordings'))
+
+    const currentPageDefault = +window.localStorage.getItem('currentPage') || 1
+
+    const [pageSize, setPageSize] = useState(10)
+    const [currentPage, setCurrentPage] = useState(currentPageDefault)
+    const totalCount = recordings.length
+
+    const lastIndex = currentPage * pageSize
+    const firstIndex = lastIndex - pageSize
+    const visibleRecordings = recordings.slice(firstIndex, lastIndex)
+
+    useEffect(() => {
+        window.localStorage.setItem('currentPage', currentPage.toString())
+    }, [currentPage])
 
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
 
     const changeVisibleDependencies = item => {
-        visibleDependenciesId.map(id => (id == item.id
-                ? setVisibleDependenciesId(visibleDependenciesId.filter(id => id != item.id))
-                : setVisibleDependenciesId([...visibleDependenciesId, item.id])
+        visibleDependenciesId.map(id => (id == item.recordid
+                ? setVisibleDependenciesId(visibleDependenciesId.filter(id => id != item.recordid))
+                : setVisibleDependenciesId([...visibleDependenciesId, item.recordid])
         ))
     };
 
-    const [selectedTrackId, setSelectedTrackId] = useState(null)
+    const [selectedTrackId, setSelectedTrackId] = useState("")
 
     const trackIsActive = (track, className) => selectedTrackId !== track.recordid
         ? `${className}`
         : `${className} ${styles.active}`
 
+    const selectColumn = async (values) => {
+        await new Promise((r) => setTimeout(r, 500));
+        alert(JSON.stringify(values, null, 2));
+    }
+
     return (
         <>
-            <TitlePage isListRecordsPage={true} title="Список записей" selectedTrackId={selectedTrackId}/>
+            <TitlePage isListRecordsPage={true}
+                       title="Список записей"
+                       selectedTrackId={selectedTrackId}
+                       selectColumn={selectColumn}
+                       setPageSize={setPageSize}
+                       pageSize={pageSize}
+            />
             <table className={styles.list}>
                 <thead>
                 <tr>
@@ -274,23 +97,27 @@ const ListRecords = () => {
                 </tr>
                 </thead>
                 <tbody>
-                {recordings.map((r, index) => {
+                {visibleRecordings.map((r, index) => {
 
-                    return <>
-                        <tr key={r.recordid}
-                            className={trackIsActive(r, styles.list__record)}
+                    // парсинг метадаты
+                    const metaData = {}
+                    r.metadata?.map(item => (
+                        metaData[item.name] = item.value
+                    ))
+
+                    return <React.Fragment key={r.recordid}>
+                        <tr className={trackIsActive(r, styles.list__record)}
                             onClick={() => setSelectedTrackId(r.recordid)}
                         >
                             <td>
-                                {/*{r.dependencies.length*/
-                                     false ? <img
+                                {r.record_count > 1 ? <img
                                         src="/records-arrow.svg"
                                         alt=""
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                             e.stopPropagation()
                                             changeVisibleDependencies(r)
                                         }}
-                                        style={visibleDependenciesId.some(id => id == r.id)
+                                        style={visibleDependenciesId.some(id => id === r.recordid)
                                             ? {transform: 'rotate(180deg)'}
                                             : null
                                         }
@@ -298,56 +125,53 @@ const ListRecords = () => {
                                     : null}
                                 <img src="/records-play.svg" alt="playPause"/>
                             </td>
-                            <td>{index + 1}</td>
-                            <td>{r.starttime}</td>
-                            <td>{r.mediaChanel}</td>
+                            <td>{r.recordid}</td>
+                            <td>{dateToString(r.starttime)}</td>
+                            <td>{r.mediatype}</td>
                             <td>{r.username}</td>
-                            <td>{r.callFromNumber}</td>
-                            <td>{r.callToNumber}</td>
-                            <td>{r.source}</td>
+                            <td>{r.externalDN}</td>
+                            <td>{r.localDN}</td>
+                            <td>{metaData.globalInterationOrigin}</td>
                             <td>{r.type}</td>
                             <td>{timeTransformer(r.duration)}</td>
                             <td>{r.callId}</td>
                         </tr>
-                        {/*{visibleDependenciesId.some(id => id == r.id) && r.dependencies.map(d => {*/}
-                        {/*    return (*/}
-                        {/*        <tr key={d.number}*/}
-                        {/*            className={trackIsActive(d, styles.list__record_opened)}*/}
-                        {/*            onClick={() => setSelectedTrackId(d.id)}*/}
-                        {/*        >*/}
-                        {/*            <td>*/}
-                        {/*                <img src="/records-play.svg" alt="playPause"/>*/}
-                        {/*            </td>*/}
-                        {/*            <td>{d.number}</td>*/}
-                        {/*            <td>{d.datetime}</td>*/}
-                        {/*            <td>{d.mediaChanel}</td>*/}
-                        {/*            <td>{d.agent}</td>*/}
-                        {/*            <td>{d.callFromNumber}</td>*/}
-                        {/*            <td>{d.callToNumber}</td>*/}
-                        {/*            <td>{d.source}</td>*/}
-                        {/*            <td>{d.direction}</td>*/}
-                        {/*            <td>{d.duration}</td>*/}
-                        {/*            <td>{d.id}</td>*/}
-                        {/*        </tr>*/}
-                        {/*    )*/}
-                        {/*})}*/}
-                    </>
+                        {visibleDependenciesId.some(id => id == r.recordid) && r.dependencies.map(d => {
+
+                            // парсинг метадаты
+                            const metaData = {}
+                            r.metadata?.map(item => (
+                                metaData[item.name] = item.value
+                            ))
+
+                            return (
+                                <tr key={d.recordid}
+                                    className={trackIsActive(d, styles.list__record_opened)}
+                                    onClick={() => setSelectedTrackId(d.recordid)}
+                                >
+                                    <td>
+                                        <img src="/records-play.svg" alt="playPause"/>
+                                    </td>
+                                    <td>{d.recordid}</td>
+                                    <td>{dateToString(d.starttime)}</td>
+                                    <td>{dateToString(d.mediatype)}</td>
+                                    <td>{d.username}</td>
+                                    <td>{d.externalDN}</td>
+                                    <td>{d.localDN}</td>
+                                    <td>{metaData.globalInterationOrigin}</td>
+                                    <td>{d.type}</td>
+                                    <td>{timeTransformer(d.duration)}</td>
+                                    <td>{d.callId}</td>
+                                </tr>
+                            )
+                        })}
+                    </React.Fragment>
                 })}
                 </tbody>
             </table>
             <div className={styles.info}>
-                <div className={styles.shown}>Показано <b>10</b> из <b>2000</b> результатов</div>
-                <div className={styles.pagination}>
-                    <button><img src="/pagination-prev.svg" alt="prev"/></button>
-                    <button className={styles.active}>1</button>
-                    <button>2</button>
-                    <button>3</button>
-                    <button>4</button>
-                    <button>5</button>
-                    <button disabled={true}>...</button>
-                    <button>200</button>
-                    <button><img src="/pagination-next.svg" alt="next"/></button>
-                </div>
+                <div className={styles.shown}>Показано <b>{pageSize}</b> из <b>{recordings.length}</b> результатов</div>
+                <Pagination pageSize={pageSize} totalCount={totalCount} currentPage={currentPage} onChangePage={setCurrentPage}/>
             </div>
         </>
     )

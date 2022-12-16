@@ -2,8 +2,9 @@ import styles from '../styles/information.module.scss'
 import TitlePage from "./TitlePage";
 import {FC} from 'react'
 import {RecordingItem} from "../api/types";
+import dateToString from "../utils/dateToString";
 
-const Information: FC<{recordingDetail: RecordingItem | null}> = ({recordingDetail}) => {
+const Information: FC<{recordingDetail: RecordingItem}> = ({recordingDetail}) => {
     return (
         <>
             <TitlePage title="Информация по взаимодействию" isInteraction={true}/>
@@ -11,11 +12,11 @@ const Information: FC<{recordingDetail: RecordingItem | null}> = ({recordingDeta
                 <h2>Временной диапазон</h2>
                 <div className={styles.block__item}>
                     <p>Дата и время начала</p>
-                    <p>{recordingDetail.starttime}</p>
+                    <p>{dateToString(recordingDetail.starttime)}</p>
                 </div>
                 <div className={styles.block__item}>
                     <p>Дата и время окончания</p>
-                    <p>{recordingDetail.stoptime}</p>
+                    <p>{dateToString(recordingDetail.stoptime)}</p>
                 </div>
                 <div className={styles.block__item}>
                     <p>Длительность</p>

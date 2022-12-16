@@ -8,7 +8,9 @@ export interface RecordingsState {
 }
 
 const initialState: RecordingsState = {
-    data: null,
+    data: {
+        items: []
+    }
 }
 
 export const recordingsSlice = createSlice({

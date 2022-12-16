@@ -5,6 +5,8 @@ import Information from "../../components/Information";
 import {Api} from "../../api";
 import {GetServerSidePropsContext, NextPage} from "next";
 import {RecordingItem} from "../../api/types";
+import {useEffect, useState} from "react";
+import {useRouter} from "next/router";
 
 const Player = dynamic(
     () => import('../../components/Player'),
@@ -16,8 +18,20 @@ interface InformationProps {
 }
 
 const RecordingDetailPage: NextPage<InformationProps> = ({recordingDetail}) => {
+
+    // const [recordingDetail, setRecordingDetail] = useState()
+    // const router = useRouter()
+    // const recordingId = router.query.id
+    // useEffect(() => {
+    //     const fetchData = async (recordingId) => {
+    //         const recordingDetail = await Api().recordings.getRecordingDetail(recordingId)
+    //         setRecordingDetail(recordingDetail.items[0])
+    //     }
+    //     fetchData(recordingId)
+    // }, [recordingId])
+
     // const recordingDetail = useAppSelector(selectRecordingDetail)
-    console.log(recordingDetail)
+    // console.log(recordingDetail)
     return (
         <>
             <Header isInteraction={true}/>
@@ -29,7 +43,7 @@ const RecordingDetailPage: NextPage<InformationProps> = ({recordingDetail}) => {
     );
 };
 
-export const getServerSideProps  = async (ctx: GetServerSidePropsContext) => {
+export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
     try {
         const recordingId = ctx.query.id as string
         const recordingDetail = await Api(ctx).recordings.getRecordingDetail(recordingId)

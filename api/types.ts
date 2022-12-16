@@ -4,11 +4,11 @@ export interface UserInfo {
     LastName: string
 }
 export interface Capabilities {
-    CanDetailView: "true",
-    CanExport: "false",
-    CanStandartForm: "false",
-    CanRead: "true",
-    CanDelete: "true"
+    CanDetailView: 'true' | 'false',
+    CanExport: 'true' | 'false',
+    CanStandartForm: 'true' | 'false',
+    CanRead: 'true' | 'false',
+    CanDelete: 'true' | 'false'
 }
 export interface BusinessAttributes {
     callId: string,
@@ -22,15 +22,12 @@ export interface BusinessAttributes {
     CustomerType: string,
     duration: string,
     Project: string,
-    path: string,
-    rec_type: string,
     serviceTask: string,
-    customerSegment: string,
     caseId: string,
     externalDN: string,
     recordingid: string,
     localDN: string,
-    waveform_path: string,
+    mediatype: string,
     username: string
 }
 
@@ -38,9 +35,11 @@ export interface ResponseAuth {
     UserInfo: UserInfo[],
     Capabilities: Capabilities[],
     BusinessAttributes: BusinessAttributes[]
+    Enums: any[]
 }
 
 export interface RecordingItem {
+    record_count: number
     callId: string,
     duration: number,
     externalDN: string,
@@ -50,7 +49,9 @@ export interface RecordingItem {
     starttime: string,
     stoptime: string,
     type: string,
-    username: string
+    username: string,
+    mediatype: string,
+    dependencies?: RecordingItem[]
 }
 
 export interface ResponseSearchRecordings {

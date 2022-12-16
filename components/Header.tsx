@@ -5,7 +5,8 @@ import Modal from "./Modal";
 import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectAuthUserData, setAuthUserData} from "../redux/slices/auth";
 import {destroyCookie} from 'nookies'
-import Router from "next/router";
+import Router, {useRouter} from "next/router";
+import {Api} from "../api";
 
 const Header = ({
                     isFiltersPage = false,
@@ -45,6 +46,20 @@ const Header = ({
         destroyCookie(null, "rwsAuthToken")
         dispatch(setAuthUserData(null))
         Router.replace('/login')
+    }
+
+    const router = useRouter()
+
+    const deleteRecording = async (recordingId) => {
+        try {
+            const data = await Api().recordings.deleteRecording(recordingId)
+            if (data.code === 0) {
+                setPopupDelete(false)
+                //todo: Сообщение 'запись удалена' и редирект
+            }
+        } catch (e) {
+            console.log(e)
+        }
     }
 
     return (
@@ -88,7 +103,7 @@ const Header = ({
                             </button>
                         </>}
                         {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
-                        {isInteraction && <button className={styles.header__action__reset}
+                        {isInteraction && userData.Capabilities[0].CanDelete === "true" && <button className={styles.header__action__reset}
                                                   onClick={() => setPopupDelete(true)}>
                             <img src="/reset.svg" alt="reset"/>
                             Удалить запись
@@ -115,8 +130,7 @@ const Header = ({
                    setActive={setPopupDelete}
                    title='Удалить запись?' text='Вы хотите удалить текущую запись.' cancelText='Отменить'
                    confirmText='Удалить' cancel={() => setPopupDelete(false)}
-                   confirm={() => {
-                   }}
+                   confirm={() => deleteRecording(router.query.id)}
                    isNegative={true}
                    form="main-form"
             />

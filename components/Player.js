@@ -4,6 +4,9 @@ import {useEffect, useRef, useState} from "react";
 import styles from '../styles/player.module.scss'
 import timeTransformer from "../utils/timeTrasformer";
 import copy from "copy-to-clipboard";
+import {useAppSelector} from "../redux/hooks";
+import {selectAuthUserData} from "../redux/slices/auth";
+import Cookies, {parseCookies} from "nookies";
 
 
 const Player = () => {
@@ -17,6 +20,11 @@ const Player = () => {
     const [speed, setSpeed] = useState(1)
 
     const [isCopiedLink, setIsCopiedLink] = useState(false)
+
+    const userData = useAppSelector(selectAuthUserData)
+
+    const cookies = parseCookies()
+    const token = cookies.rwsAuthToken
 
     useEffect(() => {
         wavesurfer.current = WaveSurfer.create({
@@ -32,8 +40,13 @@ const Player = () => {
             height: 48,
             responsive: true,
             fillParent: true,
-            scrollParent: false
-        })
+            scrollParent: false,
+            xhr: {requestHeaders: [{
+                    key: "Authorization",
+                    value: `Bearer ${token}`
+                }]
+            }
+        });
     }, [])
 
     useEffect(() => {
@@ -42,7 +55,8 @@ const Player = () => {
         // setTrack('http://192.168.1.200:8080/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
         setTrack('/middle.mp3')
 
-        track && wavesurfer.current.load(track)
+        // track && wavesurfer.current.load(track)
+        track && wavesurfer.current.load('https://recording:8443/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
 
         wavesurfer.current.on('ready', () => {
             setIsReady(true)
@@ -130,10 +144,10 @@ const Player = () => {
                         {!isCopiedLink ? "Копировать ссылку" : "Скопировано!"}
 
                     </button>
-                    <button className={styles.player__control__download}>
+                    {userData.Capabilities[0].CanExport === 'true' && <button className={styles.player__control__download}>
                         <img src="/download.svg" alt="download"/>
                         Скачать mp3
-                    </button>
+                    </button>}
                     <p className={styles.player__control__time}>{isReady ? duration : '--:--:--'}</p>
                 </div>
             </div>

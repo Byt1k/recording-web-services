@@ -3,22 +3,31 @@ import styles from '../styles/titlePage.module.scss'
 import {useState} from "react";
 import {Field, Form, Formik} from "formik";
 import Modal from "./Modal";
+import {useAppSelector} from "../redux/hooks";
+import {selectAuthUserData} from "../redux/slices/auth";
+import {log} from "util";
 
 interface PropsType {
     title: string,
     isListRecordsPage?: boolean
     isSearch?: boolean
     isInteraction?: boolean
-    selectedTrackId?: string
+    selectedTrackId?: string,
+    selectColumn?: (any) => void
+    setPageSize?: (number) => void
+    pageSize?: number
 }
 
 const TitlePage: React.FC<PropsType> = ({
-                       title,
-                       isListRecordsPage = false,
-                       isSearch = false,
-                       isInteraction = false,
-                       selectedTrackId
-                   }) => {
+                                            title,
+                                            isListRecordsPage = false,
+                                            isSearch = false,
+                                            isInteraction = false,
+                                            selectedTrackId,
+                                            selectColumn,
+                                            setPageSize,
+                                            pageSize
+                                        }) => {
 
     const [popupSelectColumns, setPopupSelectColumns] = useState(false)
     const [popupSaveFilter, setPopupSaveFilter] = useState(false)
@@ -28,20 +37,33 @@ const TitlePage: React.FC<PropsType> = ({
         setPopupSaveFilter(false)
     }
 
+    const userData = useAppSelector(selectAuthUserData)
+    const businessAttributes = userData.BusinessAttributes[0]
+
+    // Сортировака столбцов по алфавиту
+    // const sortableBusinessAttributes = [];
+    // for (const key in businessAttributes) {
+    //     sortableBusinessAttributes.push([businessAttributes[key]]);
+    // }
+    // sortableBusinessAttributes.sort();
+
+    const possibleListPageSize = [10, 25, 50, 100]
+
     return (
         <>
             <div className={styles.title}>
                 <h2>{title}</h2>
                 {isListRecordsPage && <div className={styles.title__count}>
                     <p>Записей на странице</p>
-                    <button className={styles.active}>10</button>
-                    <button>25</button>
-                    <button>50</button>
-                    <button>100</button>
+                    {possibleListPageSize.map(size => (
+                        <button key={size} className={size === pageSize ? styles.active : ""}
+                                onClick={() => setPageSize(size)}
+                        >{size}</button>
+                    ))}
                 </div>}
                 {isListRecordsPage && <div className={styles.title__actions}>
-                    <Link href={`/list/${selectedTrackId}`}
-                          className={styles.title__actions__btn_outline}>Взаимодействие</Link>
+                    {userData.Capabilities[0].CanDetailView === 'true' && <Link href={`/list/${selectedTrackId}`}
+                                                                                className={styles.title__actions__btn_outline}>Взаимодействие</Link>}
                     <button
                         className={styles.title__actions__btn_outline}
                         onClick={() => setPopupSelectColumns(true)}
@@ -74,59 +96,17 @@ const TitlePage: React.FC<PropsType> = ({
             >
                 <Formik
                     initialValues={{columns: []}}
-                    onSubmit={async (values) => {
-                        await new Promise((r) => setTimeout(r, 500));
-                        alert(JSON.stringify(values, null, 2));
-                        setPopupSelectColumns(false)
-                    }}
+                    onSubmit={values => selectColumn(values)}
                 >
                     <Form id="selectColumnsForm" className={styles.selectColumnsForm}>
                         <div className={styles.wrapper}>
                             <div className={styles.selectColumnsForm__columns}>
-                                <label>
-                                    <Field type="checkbox" value="datetime" name="columns"/>
-                                    Дата и время
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="mediaChanel" name="columns"/>
-                                    Медиаканал
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="agent" name="columns"/>
-                                    Агент
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="callFromNumber" name="columns"/>
-                                    Звонок с номера
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="callToNumber" name="columns"/>
-                                    Звонок на номер
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="direction" name="columns"/>
-                                    Направление
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="duration" name="columns"/>
-                                    Длительность
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="typeClient" name="columns"/>
-                                    Тип клиента
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="interactionId" name="columns"/>
-                                    Идентификатор взаимодействия
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="_CB_DIM_CHANNEL" name="columns"/>
-                                    _CB_DIM_CHANNEL
-                                </label>
-                                <label>
-                                    <Field type="checkbox" value="_CB_DIM_TYPE" name="columns"/>
-                                    _CB_DIM_TYPE
-                                </label>
+                                {Object.keys(businessAttributes).map(key => (
+                                    <label key={key}>
+                                        <Field type="checkbox" value={key} name="columns"/>
+                                        {businessAttributes[key]}
+                                    </label>
+                                ))}
                             </div>
                         </div>
                     </Form>
@@ -141,7 +121,8 @@ const TitlePage: React.FC<PropsType> = ({
                    active={popupSaveFilter}
                    setActive={setPopupSaveFilter}
                    form={"saveFilterForm"}
-                   confirm={()=>{}}
+                   confirm={() => {
+                   }}
             >
                 <Formik
                     initialValues={{
