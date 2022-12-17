@@ -1,6 +1,35 @@
 @import "common.module";
 
+.listContainer {
+  overflow-x: auto;
+  max-width: 100%;
+
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+    background-color: #F2F2F2;
+    border-radius: 9em;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #4460F0;
+    border-radius: 9em;
+  }
+}
+
 .list {
+  thead {
+    tr {
+      td {
+        button {
+          white-space: nowrap;
+          padding-right: 10px;
+        }
+      }
+    }
+  }
+
   tbody {
     tr {
       transition: all .3s ease;
@@ -15,6 +44,7 @@
       }
 
       td {
+        white-space: nowrap;
         &:first-child {
           display: flex;
           align-items: center;

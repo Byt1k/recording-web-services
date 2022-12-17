@@ -5,7 +5,6 @@ import {Field, Form, Formik} from "formik";
 import Modal from "./Modal";
 import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
-import {log} from "util";
 
 interface PropsType {
     title: string,
@@ -13,9 +12,9 @@ interface PropsType {
     isSearch?: boolean
     isInteraction?: boolean
     selectedTrackId?: string,
-    selectColumn?: (any) => void
-    setPageSize?: (number) => void
+    setPageSize?: (size: number) => void
     pageSize?: number
+    setPopupSelectColumns?: (value: boolean) => void
 }
 
 const TitlePage: React.FC<PropsType> = ({
@@ -24,30 +23,21 @@ const TitlePage: React.FC<PropsType> = ({
                                             isSearch = false,
                                             isInteraction = false,
                                             selectedTrackId,
-                                            selectColumn,
                                             setPageSize,
-                                            pageSize
+                                            pageSize,
+                                            setPopupSelectColumns
                                         }) => {
 
-    const [popupSelectColumns, setPopupSelectColumns] = useState(false)
     const [popupSaveFilter, setPopupSaveFilter] = useState(false)
+
+    const userData = useAppSelector(selectAuthUserData)
+
+    const possibleListPageSize = [10, 25, 50, 100]
 
     const onSubmitSaveFilterForm = data => {
         alert(data)
         setPopupSaveFilter(false)
     }
-
-    const userData = useAppSelector(selectAuthUserData)
-    const businessAttributes = userData.BusinessAttributes[0]
-
-    // Сортировака столбцов по алфавиту
-    // const sortableBusinessAttributes = [];
-    // for (const key in businessAttributes) {
-    //     sortableBusinessAttributes.push([businessAttributes[key]]);
-    // }
-    // sortableBusinessAttributes.sort();
-
-    const possibleListPageSize = [10, 25, 50, 100]
 
     return (
         <>
@@ -71,7 +61,7 @@ const TitlePage: React.FC<PropsType> = ({
                         Выбор столбцов
                     </button>
                     <Link href="/" className={styles.title__actions__btn_fill}>
-                        <span className={styles.count}>5</span>
+                        {/*<span className={styles.count}>5</span>*/}
                         Фильтр
                     </Link>
                 </div>}
@@ -85,33 +75,7 @@ const TitlePage: React.FC<PropsType> = ({
                     <Link href="/list" className={styles.title__actions__btn_outline}>Вернуться к списку</Link>
                 </div>}
             </div>
-            <Modal isNegative={false}
-                   title="Выберите столбцы"
-                   cancelText="Отменить"
-                   confirmText="Выбрать"
-                   cancel={() => setPopupSelectColumns(false)}
-                   form={"selectColumnsForm"}
-                   active={popupSelectColumns}
-                   setActive={setPopupSelectColumns}
-            >
-                <Formik
-                    initialValues={{columns: []}}
-                    onSubmit={values => selectColumn(values)}
-                >
-                    <Form id="selectColumnsForm" className={styles.selectColumnsForm}>
-                        <div className={styles.wrapper}>
-                            <div className={styles.selectColumnsForm__columns}>
-                                {Object.keys(businessAttributes).map(key => (
-                                    <label key={key}>
-                                        <Field type="checkbox" value={key} name="columns"/>
-                                        {businessAttributes[key]}
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </Form>
-                </Formik>
-            </Modal>
+
             <Modal isNegative={false}
                    title="Сохранить фильтр"
                    text="Вы хотите сохранить текущий фильтр."

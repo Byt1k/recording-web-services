@@ -51,11 +51,11 @@
     column-gap: 15px;
     margin-bottom: 8px;
 
-    > input.name {
+    &__name {
       width: 520px;
     }
 
-    > input.value {
+    &__value {
       width: 320px;
     }
 

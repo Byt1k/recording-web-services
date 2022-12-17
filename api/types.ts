@@ -35,13 +35,22 @@ export interface ResponseAuth {
     UserInfo: UserInfo[],
     Capabilities: Capabilities[],
     BusinessAttributes: BusinessAttributes[]
-    Enums: any[]
+    Enums: {
+        name: string,
+        values: {
+           name: string,
+           displayName: string
+        }[]
+    }[],
+    AdditionalSearchMetadata: string[],
+    BusinessAttributesOrders: string[],
+    StandardSearchMetadata: string[]
 }
 
 export interface RecordingItem {
     record_count: number
     callId: string,
-    duration: number,
+    duration: number | string,
     externalDN: string,
     localDN: string,
     metadata: Array<any>,

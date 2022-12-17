@@ -26,6 +26,7 @@ const Player = () => {
     const cookies = parseCookies()
     const token = cookies.rwsAuthToken
 
+    // Инициализация плеера
     useEffect(() => {
         wavesurfer.current = WaveSurfer.create({
             container: '#audio',
@@ -52,11 +53,11 @@ const Player = () => {
     useEffect(() => {
 
         // todo: api-request
-        // setTrack('http://192.168.1.200:8080/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
-        setTrack('/middle.mp3')
+        // setTrack('/middle.mp3')
+        setTrack('https://recording:8443/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
 
         // track && wavesurfer.current.load(track)
-        track && wavesurfer.current.load('https://recording:8443/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
+        track && wavesurfer.current.load(track)
 
         wavesurfer.current.on('ready', () => {
             setIsReady(true)
@@ -74,7 +75,7 @@ const Player = () => {
 
     const playPause = async () => {
         await wavesurfer.current.playPause()
-        setIsPlaying(!isPlaying)
+        setIsPlaying(v => !v)
     }
 
     const stop = () => {
@@ -109,7 +110,7 @@ const Player = () => {
                     <img src="/next.svg" alt="next"/>
                     <input type="range" name="volume" min="0" max="100" step="1" value={volume}
                            className={styles.player__control__volume}
-                           onChange={e => setVolume(e.target.value)}/>
+                           onChange={e => setVolume(+e.target.value)}/>
                     <Select options={[
                                 {value: 1, label: '1x'},
                                 {value: 1.5, label: '1.5x'},

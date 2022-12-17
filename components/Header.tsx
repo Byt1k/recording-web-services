@@ -8,17 +8,24 @@ import {destroyCookie} from 'nookies'
 import Router, {useRouter} from "next/router";
 import {Api} from "../api";
 
-const Header = ({
+type HeaderProps = {
+    isFiltersPage?: boolean,
+    isSearchAction?: boolean,
+    isInteraction?: boolean,
+    setPopupResetFilter?: (value: boolean) => void
+}
+
+const Header: React.FC<HeaderProps> = ({
                     isFiltersPage = false,
                     isSearchAction = false,
-                    isInteraction = false
+                    isInteraction = false,
+                    setPopupResetFilter
                 }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const userData = useAppSelector(selectAuthUserData)
 
     const [popupExit, setPopupExit] = useState(false)
-    const [popupResetFilter, setPopupResetFilter] = useState(false)
     const [popupDelete, setPopupDelete] = useState(false)
 
     const exitModalRef = useRef(null)
@@ -116,14 +123,6 @@ const Header = ({
                    title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
                    confirmText='Выйти' cancel={() => setPopupExit(false)}
                    confirm={() => exit()}
-                   isNegative={true}
-            />
-            <Modal active={popupResetFilter}
-                   setActive={setPopupResetFilter}
-                   title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
-                   confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
-                   confirm={() => {
-                   }}
                    isNegative={true}
             />
             <Modal active={popupDelete}
