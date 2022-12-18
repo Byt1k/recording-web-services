@@ -7,6 +7,7 @@ import {GetServerSidePropsContext, NextPage} from "next";
 import {RecordingItem} from "../../api/types";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
+import {log} from "util";
 
 const Player = dynamic(
     () => import('../../components/Player'),
@@ -32,11 +33,12 @@ const RecordingDetailPage: NextPage<InformationProps> = ({recordingDetail}) => {
 
     // const recordingDetail = useAppSelector(selectRecordingDetail)
     // console.log(recordingDetail)
+
     return (
         <>
             <Header isInteraction={true}/>
             <div className={styles.container}>
-                <Player/>
+                <Player pathFromProps={recordingDetail.path} durationFromProps={recordingDetail.duration}/>
                 <Information recordingDetail={recordingDetail}/>
             </div>
         </>

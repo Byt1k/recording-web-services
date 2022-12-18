@@ -21,7 +21,7 @@ App.getInitialProps = wrapper.getInitialAppProps((store) =>
             store.dispatch(setAuthUserData(authUserData))
         } catch (e) {
             if (ctx.asPath !== '/login') {
-                ctx.res.writeHead(302, {
+                ctx.res?.writeHead(302, {
                     Location: '/login'
                 })
                 ctx.res.end()

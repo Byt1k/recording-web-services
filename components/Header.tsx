@@ -7,6 +7,7 @@ import {selectAuthUserData, setAuthUserData} from "../redux/slices/auth";
 import {destroyCookie} from 'nookies'
 import Router, {useRouter} from "next/router";
 import {Api} from "../api";
+import modalStyles from '../styles/modal.module.scss'
 
 type HeaderProps = {
     isFiltersPage?: boolean,
@@ -16,11 +17,11 @@ type HeaderProps = {
 }
 
 const Header: React.FC<HeaderProps> = ({
-                    isFiltersPage = false,
-                    isSearchAction = false,
-                    isInteraction = false,
-                    setPopupResetFilter
-                }) => {
+                                           isFiltersPage = false,
+                                           isSearchAction = false,
+                                           isInteraction = false,
+                                           setPopupResetFilter
+                                       }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const userData = useAppSelector(selectAuthUserData)
@@ -110,29 +111,30 @@ const Header: React.FC<HeaderProps> = ({
                             </button>
                         </>}
                         {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
-                        {isInteraction && userData.Capabilities[0].CanDelete === "true" && <button className={styles.header__action__reset}
-                                                  onClick={() => setPopupDelete(true)}>
-                            <img src="/reset.svg" alt="reset"/>
-                            Удалить запись
-                        </button>}
+                        {isInteraction && userData.Capabilities[0].CanDelete === "true" &&
+                            <button className={styles.header__action__reset}
+                                    onClick={() => setPopupDelete(true)}>
+                                <img src="/reset.svg" alt="reset"/>
+                                Удалить запись
+                            </button>}
                     </div>
                 </div>
             </header>
-            <Modal active={popupExit}
-                   setActive={setPopupExit}
-                   title='Выйти?' text='Вы действительно хотите выйти?' cancelText='Остаться'
-                   confirmText='Выйти' cancel={() => setPopupExit(false)}
-                   confirm={() => exit()}
-                   isNegative={true}
-            />
-            <Modal active={popupDelete}
-                   setActive={setPopupDelete}
-                   title='Удалить запись?' text='Вы хотите удалить текущую запись.' cancelText='Отменить'
-                   confirmText='Удалить' cancel={() => setPopupDelete(false)}
-                   confirm={() => deleteRecording(router.query.id)}
-                   isNegative={true}
-                   form="main-form"
-            />
+            <Modal active={popupExit} setActive={setPopupExit} title='Выйти?' text='Вы действительно хотите выйти?'>
+                <div className={modalStyles.modal__content__action}>
+                    <button onClick={() => setPopupExit(false)}>Остаться</button>
+                    <button className={modalStyles.negative} onClick={() => exit()}>Выйти</button>
+                </div>
+            </Modal>
+            <Modal active={popupDelete} setActive={setPopupDelete} title='Удалить запись?'
+                   text='Вы хотите удалить текущую запись.'>
+                <div className={modalStyles.modal__content__action}>
+                    <button onClick={() => setPopupDelete(false)}>Отменить</button>
+                    <button className={modalStyles.negative} onClick={() => deleteRecording(router.query.id)}>
+                        Удалить
+                    </button>
+                </div>
+            </Modal>
         </>
     );
 };

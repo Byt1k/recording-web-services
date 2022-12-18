@@ -4,24 +4,32 @@ import {useEffect, useRef, useState} from "react";
 import styles from '../styles/player.module.scss'
 import timeTransformer from "../utils/timeTrasformer";
 import copy from "copy-to-clipboard";
-import {useAppSelector} from "../redux/hooks";
+import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
 import Cookies, {parseCookies} from "nookies";
+import {selectRecordingDetail, selectRecordingIsPlaying, setIsPlaying} from "../redux/slices/recordingDetail";
 
+interface PlayerProps {
+    pathFromProps?: string,
+    durationFromProps?: string | number
+}
 
-const Player = () => {
+const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
     const wavesurfer = useRef(null)
-    const [track, setTrack] = useState("")
+    const [track, setTrack] = useState(pathFromProps)
     const [isReady, setIsReady] = useState(false)
-    const [isPlaying, setIsPlaying] = useState(false)
+    // const [isPlaying, setIsPlaying] = useState(false)
     const [currentTime, setCurrentTime] = useState("")
-    const [duration, setDuration] = useState("")
+    const [duration, setDuration] = useState(durationFromProps)
     const [volume, setVolume] = useState(100)
     const [speed, setSpeed] = useState(1)
 
     const [isCopiedLink, setIsCopiedLink] = useState(false)
 
     const userData = useAppSelector(selectAuthUserData)
+
+    const {isPlaying} = useAppSelector(selectRecordingIsPlaying)
+    const dispatch = useAppDispatch()
 
     const cookies = parseCookies()
     const token = cookies.rwsAuthToken
@@ -42,7 +50,9 @@ const Player = () => {
             responsive: true,
             fillParent: true,
             scrollParent: false,
-            xhr: {requestHeaders: [{
+            // splitChannels: true,
+            xhr: {
+                requestHeaders: [{
                     key: "Authorization",
                     value: `Bearer ${token}`
                 }]
@@ -50,19 +60,23 @@ const Player = () => {
         });
     }, [])
 
+    const data = useAppSelector(selectRecordingDetail)
+
     useEffect(() => {
 
-        // todo: api-request
-        // setTrack('/middle.mp3')
-        setTrack('https://recording:8443/recordings/v1/recordfiles/00S9BFN7V09MREPSP00QHG5AES000007_2022-11-11_07-31-16-006E0236-100039E0-00000001.mp3')
+        setTrack(data?.path)
 
-        // track && wavesurfer.current.load(track)
+        // во время загрузки
+        setDuration("--:--:--")
+
         track && wavesurfer.current.load(track)
 
         wavesurfer.current.on('ready', () => {
+            dispatch(setIsPlaying({recordid: data.recordid, isPlaying: false}))
             setIsReady(true)
-            const duration = timeTransformer(wavesurfer.current.getDuration())
-            setDuration(duration)
+            // const duration = timeTransformer(wavesurfer.current.getDuration())
+            setDuration(timeTransformer(data ? data.duration : durationFromProps))
+            setIsCopiedLink(false)
         })
 
         wavesurfer.current.on('audioprocess', () => {
@@ -71,16 +85,16 @@ const Player = () => {
         })
 
         wavesurfer.current.on('finish', stop)
-    }, [track])
+    }, [track, data])
 
-    const playPause = async () => {
-        await wavesurfer.current.playPause()
-        setIsPlaying(v => !v)
-    }
+    // const playPause = async () => {
+    //     await wavesurfer.current.playPause()
+    //     dispatch(setIsPlaying({recordid: data.recordid, isPlaying: !isPlaying}))
+    // }
 
     const stop = () => {
         wavesurfer.current.stop()
-        setIsPlaying(false)
+        dispatch(setIsPlaying({recordid: data.recordid, isPlaying: false}))
         setCurrentTime("")
     }
 
@@ -98,13 +112,27 @@ const Player = () => {
         setIsCopiedLink(true)
     }
 
+    useEffect(() => {
+        const play = async () => {
+            await wavesurfer.current.play()
+        }
+        const pause = async () => {
+            await wavesurfer.current.pause()
+        }
+
+        !isPlaying ? pause() : play()
+    }, [isPlaying])
+
     return (
         <div className={styles.player}>
             <div className={styles.player__audio} id="audio"></div>
             <div className={styles.player__control}>
                 <div className={styles.left}>
                     <img src={!isPlaying ? "/play.svg" : "/pause.svg"} alt="playPause"
-                         onClick={isReady ? playPause : null}/>
+                         onClick={isReady ? () => dispatch(setIsPlaying({
+                             recordid: data.recordid,
+                             isPlaying: !isPlaying
+                         })) : null}/>
                     <img src="/stop.svg" alt="stop" onClick={stop}/>
                     <img src="/prev.svg" alt="prev"/>
                     <img src="/next.svg" alt="next"/>
@@ -112,10 +140,10 @@ const Player = () => {
                            className={styles.player__control__volume}
                            onChange={e => setVolume(+e.target.value)}/>
                     <Select options={[
-                                {value: 1, label: '1x'},
-                                {value: 1.5, label: '1.5x'},
-                                {value: 2, label: '2x'}
-                            ]}
+                        {value: 1, label: '1x'},
+                        {value: 1.5, label: '1.5x'},
+                        {value: 2, label: '2x'}
+                    ]}
                             instanceId="speed"
                             defaultValue={{value: 1, label: '1x'}}
                             styles={{
@@ -145,10 +173,11 @@ const Player = () => {
                         {!isCopiedLink ? "Копировать ссылку" : "Скопировано!"}
 
                     </button>
-                    {userData.Capabilities[0].CanExport === 'true' && <button className={styles.player__control__download}>
-                        <img src="/download.svg" alt="download"/>
-                        Скачать mp3
-                    </button>}
+                    {userData?.Capabilities[0].CanExport === 'true' &&
+                        <button className={styles.player__control__download}>
+                            <img src="/download.svg" alt="download"/>
+                            Скачать mp3
+                        </button>}
                     <p className={styles.player__control__time}>{isReady ? duration : '--:--:--'}</p>
                 </div>
             </div>

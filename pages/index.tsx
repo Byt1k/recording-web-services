@@ -11,6 +11,7 @@ import {Api} from "../api";
 import {setRecordings} from "../redux/slices/recordings";
 import TitlePage from "../components/TitlePage";
 import Select from "react-select";
+import modalStyles from "../styles/modal.module.scss";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -19,9 +20,24 @@ const Player = dynamic(
 
 
 const Index = () => {
+
+    const [error, setError] = useState(null)
+
+
+    // Очистка поиска
     const [popupResetFilter, setPopupResetFilter] = useState(false)
+
+    const defaultValues = {
+        'mediatype': '',
+        'metadataQuery.Project': '',
+        'type': '',
+        'metadataQuery.serviceType': '',
+        'metadataQuery.serviceName': '',
+        'additionalParams.p_1.name': ''
+    }
+
     const resetFilter = () => {
-        reset()
+        reset(defaultValues)
         setAdditionalParams(initialAdditionalParams)
         setPopupResetFilter(false)
     }
@@ -130,9 +146,12 @@ const Index = () => {
             // Отправка запроса
             const data = await Api().recordings.search(dataQuery)
             dispatch(setRecordings(data))
+            setError(null)
             router.push('/list')
         } catch (e) {
-            console.log('Register err: ', e)
+            if (e.response.status === 404) {
+                setError('Записи не найдены')
+            }
         }
     }
 
@@ -148,7 +167,7 @@ const Index = () => {
         values.map(v => ({value: v.name, label: v.displayName}))
     )
 
-    userData.Enums.map(item => {
+    userData?.Enums.map(item => {
         if (item.name === 'mediatype') {
             const mediaTypeValues = parseMetadataValues(item.values)
             mediaTypeOptions = [...mediaTypeOptions, ...mediaTypeValues]
@@ -172,7 +191,7 @@ const Index = () => {
     })
 
     const additionalParamsOptions = setDefaultOption('Не выбрано')
-    userData.AdditionalSearchMetadata.map(i => {
+    userData?.AdditionalSearchMetadata.map(i => {
         additionalParamsOptions.push({value: i, label: i})
     })
 
@@ -351,18 +370,24 @@ const Index = () => {
                                     </div>
                                 )
                             })}
-                            <button onClick={AddAdditionalParam} className={styles.addAdditionalParam}>+ Добавить</button>
+                            <div style={{cursor: 'pointer'}} onClick={AddAdditionalParam} className={styles.addAdditionalParam}>+ Добавить</div>
                         </div>
                     </form>
                 </>
             </div>
-            <Modal active={popupResetFilter}
-                   setActive={setPopupResetFilter}
-                   title='Сбросить фильтр?' text='Вы хотите сбросить текущий фильтр.' cancelText='Отменить'
-                   confirmText='Сбросить' cancel={() => setPopupResetFilter(false)}
-                   confirm={() => resetFilter()}
-                   isNegative={true}
-            />
+            <Modal active={popupResetFilter} setActive={setPopupResetFilter} title='Сбросить фильтр?'
+                   text='Вы хотите сбросить текущий фильтр.'>
+                <div className={modalStyles.modal__content__action}>
+                    <button onClick={() => setPopupResetFilter(false)}>Отменить</button>
+                    <button className={modalStyles.negative} onClick={() => resetFilter()}>Сбросить</button>
+                </div>
+            </Modal>
+            <Modal active={error} setActive={setError} title={error}>
+                <div className={`${modalStyles.modal__content__action} ${modalStyles.modal__content_blue}`}
+                     style={{justifyContent: 'center'}}>
+                    <button className={modalStyles.positive} onClick={() => setError(null)}>Ок</button>
+                </div>
+            </Modal>
         </>
     )
 

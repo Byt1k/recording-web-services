@@ -5,12 +5,12 @@ interface PropsType {
     setActive: Function,
     title: string,
     text?: string,
-    cancelText: string,
+    cancelText?: string,
     form?: string,
-    confirmText: string,
-    cancel: () => void,
+    confirmText?: string,
+    cancel?: () => void,
     confirm?: () => void,
-    isNegative: boolean,
+    isNegative?: boolean,
     children?: any
 }
 
@@ -35,23 +35,24 @@ const Modal: React.FC<PropsType> = ({
                  onClick={e => e.stopPropagation()}>
                 <h2>{title}</h2>
                 {text && <p>{text}</p>}
-                {children && <>
-                    {children}
-                    <div className={styles.modal__content__action}>
-                        <button onClick={cancel}>{cancelText}</button>
-                        <button className={isNegative ? styles.negative : styles.positive}
-                                type="submit" form={form}>
-                            {confirmText}
-                        </button>
-                    </div>
-                </>}
-                {!children && <div className={styles.modal__content__action}>
-                    <button onClick={cancel}>{cancelText}</button>
-                    <button className={isNegative ? styles.negative : styles.positive}
-                            onClick={confirm}>
-                        {confirmText}
-                    </button>
-                </div>}
+                {children}
+            {/*    && <>*/}
+            {/*    {children}*/}
+            {/*    <div className={styles.modal__content__action}>*/}
+            {/*        <button onClick={cancel}>{cancelText}</button>*/}
+            {/*        <button className={isNegative ? styles.negative : styles.positive}*/}
+            {/*                type="submit" form={form}>*/}
+            {/*            {confirmText}*/}
+            {/*        </button>*/}
+            {/*    </div>*/}
+            {/*</>}*/}
+            {/*    {!children && <div className={styles.modal__content__action}>*/}
+            {/*        <button onClick={cancel}>{cancelText}</button>*/}
+            {/*        <button className={isNegative ? styles.negative : styles.positive}*/}
+            {/*                onClick={confirm}>*/}
+            {/*            {confirmText}*/}
+            {/*        </button>*/}
+            {/*    </div>*/}
             </div>
         </div>
     );

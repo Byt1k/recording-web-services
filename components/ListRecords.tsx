@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import styles from '../styles/listRecords.module.scss'
 import TitlePage from "./TitlePage";
-import {useAppSelector} from "../redux/hooks";
+import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectSearchedRecordings} from "../redux/slices/recordings";
 import timeTransformer from "../utils/timeTrasformer";
 import dateToString from "../utils/dateToString";
@@ -10,6 +10,9 @@ import {selectAuthUserData} from "../redux/slices/auth";
 import Modal from "./Modal";
 import modalStyles from '../styles/titlePage.module.scss'
 import {useForm} from "react-hook-form";
+import {Api} from "../api";
+import {selectRecordingIsPlaying, setIsPlaying, setRecordingDetail} from "../redux/slices/recordingDetail";
+import modalActionStyles from '../styles/modal.module.scss'
 
 
 const ListRecords = () => {
@@ -19,10 +22,10 @@ const ListRecords = () => {
     const userData = useAppSelector(selectAuthUserData)
 
     if (recordings.length) {
-        window.localStorage.setItem('recordings', JSON.stringify(recordings));
+        localStorage.setItem('recordings', JSON.stringify(recordings));
     }
 
-    recordings = JSON.parse(window.localStorage.getItem('recordings'))
+    recordings = JSON.parse(localStorage.getItem('recordings'))
 
     recordings = recordings.map(recording => ({
         ...recording,
@@ -38,7 +41,7 @@ const ListRecords = () => {
             }))
     }))
 
-    const currentPageDefault = +window.localStorage.getItem('currentPage') || 1
+    const currentPageDefault = +localStorage.getItem('currentPage') || 1
 
     const [pageSize, setPageSize] = useState(10)
     const [currentPage, setCurrentPage] = useState(currentPageDefault)
@@ -49,7 +52,7 @@ const ListRecords = () => {
     const visibleRecordings = recordings.slice(firstIndex, lastIndex)
 
     useEffect(() => {
-        window.localStorage.setItem('currentPage', currentPage.toString())
+        localStorage.setItem('currentPage', currentPage.toString())
     }, [currentPage])
 
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
@@ -63,9 +66,24 @@ const ListRecords = () => {
 
     // Выбор акивного трэка
     const [selectedTrackId, setSelectedTrackId] = useState("")
-    const trackIsActive = (track, className) => selectedTrackId !== track.recordid
-        ? `${className}`
-        : `${className} ${styles.active}`
+    const trackIsActive = (track, className) => {
+        return selectedTrackId !== track.recordid
+            ? `${className}`
+            : `${className} ${styles.active}`
+    }
+
+    const dispatch = useAppDispatch()
+
+    useEffect(() => {
+        const getActiveTrack = async (recordingId) => {
+            const data = await Api().recordings.getRecordingDetail(recordingId)
+            dispatch(setRecordingDetail(data.items[0]))
+        }
+        if (selectedTrackId) {
+            getActiveTrack(selectedTrackId)
+        }
+    }, [selectedTrackId])
+
 
     // Выбор столбцов
     const {register, handleSubmit, formState, reset, control} = useForm()
@@ -122,6 +140,16 @@ const ListRecords = () => {
     if (sortBtn) {
         sortConfig.direction === 'descending' ? sortBtn.className = 'sorted rotate' : sortBtn.className = 'sorted'
     }
+
+    const {isPlaying, recordid: playingRecordId} = useAppSelector(selectRecordingIsPlaying)
+    const showPlayPauseImg = (recordId) => {
+        if (isPlaying && playingRecordId === recordId) {
+            return "/records-pause.svg"
+        } else {
+            return "/records-play.svg"
+        }
+    }
+
     return (
         <>
             <TitlePage isListRecordsPage={true}
@@ -164,7 +192,7 @@ const ListRecords = () => {
                                 onClick={() => setSelectedTrackId(r.recordid)}
                             >
                                 <td>
-                                    {r.record_count > 1 ? <img
+                                    {r.record_count ? <img
                                             src="/records-arrow.svg"
                                             alt=""
                                             onClick={async (e) => {
@@ -177,7 +205,11 @@ const ListRecords = () => {
                                             }
                                         />
                                         : null}
-                                    <img src="/records-play.svg" alt="playPause"/>
+                                    <button onClick={() => dispatch(setIsPlaying({recordid: r.recordid, isPlaying: !isPlaying}))}
+                                            disabled={r.recordid !== selectedTrackId}>
+                                        <img src={showPlayPauseImg(r.recordid)}
+                                             alt="playPause"/>
+                                    </button>
                                 </td>
                                 {businessAttributesKeys.map(key => {
                                     if (selectedColumns.some(c => c === key)) {
@@ -201,7 +233,11 @@ const ListRecords = () => {
                                         onClick={() => setSelectedTrackId(d.recordid)}
                                     >
                                         <td>
-                                            <img src="/records-play.svg" alt="playPause"/>
+                                            <button onClick={() => dispatch(setIsPlaying({recordid: d.recordid, isPlaying: !isPlaying}))}
+                                                    disabled={d.recordid !== selectedTrackId}>
+                                                <img src={showPlayPauseImg(d.recordid)}
+                                                     alt="playPause"/>
+                                            </button>
                                         </td>
                                         {businessAttributesKeys.map(key => {
                                             if (selectedColumns.some(c => c === key)) {
@@ -219,36 +255,34 @@ const ListRecords = () => {
                 </table>
             </div>
             <div className={styles.info}>
-                <div
-                    className={styles.shown}>Показано <b>{visibleRecordings.length}</b> из <b>{recordings.length}</b> результатов
+                <div className={styles.shown}>
+                     Показано <b>{visibleRecordings.length}</b> из <b>{recordings.length}</b> результатов
                 </div>
                 <Pagination pageSize={pageSize} totalCount={totalCount} currentPage={currentPage}
                             onChangePage={setCurrentPage}/>
             </div>
 
-            <Modal isNegative={false}
-                   title="Выберите столбцы"
-                   cancelText="Отменить"
-                   confirmText="Выбрать"
-                   cancel={() => setPopupSelectColumns(false)}
-                   form={"selectColumnsForm"}
-                   active={popupSelectColumns}
-                   setActive={setPopupSelectColumns}
-            >
-                <form id="selectColumnsForm" onSubmit={handleSubmit(saveSelectColumn)}
+            <Modal title="Выберите столбцы" active={popupSelectColumns} setActive={setPopupSelectColumns}>
+                <form onSubmit={handleSubmit(saveSelectColumn)}
                       className={modalStyles.selectColumnsForm}>
                     <div className={modalStyles.wrapper}>
                         <div className={modalStyles.selectColumnsForm__columns}>
                             {Object.keys(sortableBusinessAttributes).map(key => {
-                                return <label key={key}>
-                                    <input type="checkbox"
-                                           {...register(`columns.${sortableBusinessAttributes[key][1]}`)}
-                                           defaultChecked={selectedColumns.some(c => c === sortableBusinessAttributes[key][1])}
-                                    />
-                                    {sortableBusinessAttributes[key][0]}
-                                </label>
+                                return (
+                                    <label key={key}>
+                                        <input type="checkbox"
+                                               {...register(`columns.${sortableBusinessAttributes[key][1]}`)}
+                                               defaultChecked={selectedColumns.some(c => c === sortableBusinessAttributes[key][1])}
+                                        />
+                                        {sortableBusinessAttributes[key][0]}
+                                    </label>
+                                )
                             })}
                         </div>
+                    </div>
+                    <div className={modalActionStyles.modal__content__action}>
+                        <button onClick={() => setPopupSelectColumns(false)}>Отменить</button>
+                        <button className={modalActionStyles.positive} type='submit'>Выбрать</button>
                     </div>
                 </form>
             </Modal>

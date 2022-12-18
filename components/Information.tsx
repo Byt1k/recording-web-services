@@ -3,8 +3,14 @@ import TitlePage from "./TitlePage";
 import {FC} from 'react'
 import {RecordingItem} from "../api/types";
 import dateToString from "../utils/dateToString";
+import {useAppSelector} from "../redux/hooks";
+import {selectAuthUserData} from "../redux/slices/auth";
 
 const Information: FC<{recordingDetail: RecordingItem}> = ({recordingDetail}) => {
+
+    const {BusinessAttributes} = useAppSelector(selectAuthUserData)
+    const businessAttributes = BusinessAttributes[0]
+
     return (
         <>
             <TitlePage title="Информация по взаимодействию" isInteraction={true}/>
@@ -35,7 +41,7 @@ const Information: FC<{recordingDetail: RecordingItem}> = ({recordingDetail}) =>
                 <h2>Дополнительные данные</h2>
                 {recordingDetail.metadata.map(item => (
                     <div key={item.name} className={styles.block__item}>
-                        <p>{item.name}</p>
+                        <p>{`${businessAttributes[item.name] ? businessAttributes[item.name] : item.name}:`}</p>
                         <p>{item.value}</p>
                     </div>
                 ))}

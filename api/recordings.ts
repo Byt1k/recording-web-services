@@ -4,15 +4,22 @@ import {ResponseSearchRecordings} from "./types";
 export const recordingsApi = (instance: AxiosInstance) => ({
     async search(dto) {
         const {data} = await instance.post<ResponseSearchRecordings>('recordings/v1/search', dto)
+
         const recordings = await Promise.all(data.items.map(async (r) => {
             if (r.record_count > 1) {
                 const {data} = await instance.get(`recordings/v1/${r.callId}/conversation`)
-                const recordingConversation = data.items
-                return {...r, dependencies: recordingConversation}
+                const recordingConversation = []
+                data.items.map(item => {
+                    if (item.recordid !== r.recordid) {
+                        recordingConversation.push(item)
+                    }
+                })
+                return {...r, record_count: recordingConversation.length, dependencies: recordingConversation}
             } else {
-                return r
+                return {...r, record_count: 0}
             }
         }))
+
         return {items: recordings}
     },
     async getRecordingDetail(recordingId: string) {

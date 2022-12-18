@@ -60,7 +60,8 @@ export interface RecordingItem {
     type: string,
     username: string,
     mediatype: string,
-    dependencies?: RecordingItem[]
+    dependencies?: RecordingItem[],
+    path: string
 }
 
 export interface ResponseSearchRecordings {

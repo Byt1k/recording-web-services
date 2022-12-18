@@ -5,6 +5,7 @@ import {Field, Form, Formik} from "formik";
 import Modal from "./Modal";
 import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
+import modalStyles from "../styles/modal.module.scss";
 
 interface PropsType {
     title: string,
@@ -76,18 +77,8 @@ const TitlePage: React.FC<PropsType> = ({
                 </div>}
             </div>
 
-            <Modal isNegative={false}
-                   title="Сохранить фильтр"
-                   text="Вы хотите сохранить текущий фильтр."
-                   cancelText="Отменить"
-                   confirmText="Сохранить"
-                   cancel={() => setPopupSaveFilter(false)}
-                   active={popupSaveFilter}
-                   setActive={setPopupSaveFilter}
-                   form={"saveFilterForm"}
-                   confirm={() => {
-                   }}
-            >
+            <Modal title="Сохранить фильтр" text="Вы хотите сохранить текущий фильтр." active={popupSaveFilter}
+                   setActive={setPopupSaveFilter}>
                 <Formik
                     initialValues={{
                         filterName: '',
@@ -120,6 +111,12 @@ const TitlePage: React.FC<PropsType> = ({
                         </div>
                     </Form>
                 </Formik>
+                <div className={`${modalStyles.modal__content__action} ${modalStyles.modal__content_blue}`}>
+                    <button onClick={() => setPopupSaveFilter(false)}>Отменить</button>
+                    <button className={modalStyles.positive} onClick={() => {}} form="saveFilterForm" type="submit">
+                        Сохранить
+                    </button>
+                </div>
             </Modal>
         </>
     )
