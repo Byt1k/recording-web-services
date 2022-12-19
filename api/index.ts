@@ -3,11 +3,17 @@ import {authApi} from "./auth";
 import Cookies, {parseCookies} from "nookies";
 import axios from "axios";
 import {recordingsApi} from "./recordings";
+import * as https from "https";
+
 
 export type ApiReturnType = {
     auth: ReturnType<typeof authApi>,
     recordings: ReturnType<typeof recordingsApi>
 }
+
+const httpsAgent = new https.Agent({
+    rejectUnauthorized: false,
+});
 
 export const Api = (ctx? : NextPageContext | GetServerSidePropsContext): ApiReturnType => {
     const cookies = ctx ? Cookies.get(ctx) : parseCookies()
@@ -18,7 +24,8 @@ export const Api = (ctx? : NextPageContext | GetServerSidePropsContext): ApiRetu
         // baseURL: 'http://95.165.29.71:8080/',
         headers: {
             Authorization: 'Bearer ' + token
-        }
+        },
+        httpsAgent
     })
 
     return {
