@@ -1,5 +1,5 @@
 import Header from "../components/Header";
-import {setCookie} from "nookies";
+import {destroyCookie, setCookie} from "nookies";
 import styles from '../styles/login.module.scss'
 import {useForm} from "react-hook-form";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
@@ -9,10 +9,13 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import {LoginFormSchema} from "../utils/schemas/loginValidate";
 import {Api} from "../api";
 import {useRouter} from "next/router";
-import {GetServerSidePropsContext} from "next";
+import {setAuthUserData} from "../redux/slices/auth";
+import {useAppDispatch} from "../redux/hooks";
+import Preloader from "../components/Preloader";
 
 
 const Login = () => {
+    const [isFetching, setIsFetching] = useState(false)
 
     const [passwordIsVisible, setPasswordIsVisible] = useState(false)
     const [errorMessage, setErrorMessage] = useState('')
@@ -28,21 +31,34 @@ const Login = () => {
 
     useEffect(() => {
         if (token) {
+            setIsFetching(true)
             router.push("/")
         }
     }, [token])
 
     useEffect(() => reset(), [formState.isSubmitSuccessful])
 
+    const dispatch = useAppDispatch()
+
     const onSubmit = async ({login, password}) => {
+        setIsFetching(true)
         try {
             const token = await Api().auth.login(login, password)
             setCookie(null, 'rwsAuthToken', token, {
                 maxAge: 30 * 24 * 60 * 60,
                 path: '/'
             } )
-            setErrorMessage('');
-            setToken(token)
+            const authUserData = await Api().auth.getMe()
+
+            if (authUserData.Capabilities[0].CanRead === 'true') {
+                dispatch(setAuthUserData(authUserData))
+                setErrorMessage('');
+                setToken(token)
+                setIsFetching(false)
+            } else if (authUserData.Capabilities[0].CanRead === 'false') {
+                setErrorMessage('К системе записи нет доступа. Обратититесь к администратору')
+                destroyCookie(null, "rwsAuthToken")
+            }
 
         } catch (e) {
             console.warn('Register err: ', e)
@@ -50,6 +66,11 @@ const Login = () => {
                 setErrorMessage(e.response.data.message)
             }
         }
+        setIsFetching(false)
+    }
+
+    if (isFetching) {
+        return <Preloader/>
     }
 
     return (
@@ -74,7 +95,8 @@ const Login = () => {
                                 placeholder="Введите пароль"/>
                             <FontAwesomeIcon
                                 icon={passwordIsVisible ? faEye : faEyeSlash}
-                                onClick={() => setPasswordIsVisible(v => !v)}
+                                onMouseDown={() => setPasswordIsVisible(true)}
+                                onMouseUp={() => setPasswordIsVisible(false)}
                                 color="#B9BBBE" cursor="pointer" className={styles.login__form__field__password__icon}/>
                         </div>
                         <div className={styles.login__form__field__reestablishPassword}>Восстановить пароль</div>

@@ -55,6 +55,10 @@
       width: 520px;
     }
 
+    &__not {
+      width: 120px;
+    }
+
     &__value {
       width: 320px;
     }
@@ -98,6 +102,12 @@
       input:checked:after {
         left: 12px;
       }
+    }
+
+    &__delete {
+      font-size: 17px;
+      cursor: pointer;
+      color: #d7d7d7;
     }
   }
 

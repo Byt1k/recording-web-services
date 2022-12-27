@@ -6,21 +6,21 @@ import timeTransformer from "../utils/timeTrasformer";
 import copy from "copy-to-clipboard";
 import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
-import Cookies, {parseCookies} from "nookies";
+import {parseCookies} from "nookies";
 import {selectRecordingDetail, selectRecordingIsPlaying, setIsPlaying} from "../redux/slices/recordingDetail";
+import {Api} from "../api";
 
 interface PlayerProps {
     pathFromProps?: string,
-    durationFromProps?: string | number
+    durationFromProps?: number
 }
 
-const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
+const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) => {
     const wavesurfer = useRef(null)
-    const [track, setTrack] = useState(pathFromProps)
+    const [track, setTrack] = useState('')
     const [isReady, setIsReady] = useState(false)
-    // const [isPlaying, setIsPlaying] = useState(false)
     const [currentTime, setCurrentTime] = useState("")
-    const [duration, setDuration] = useState(durationFromProps)
+    const [duration, setDuration] = useState<string | number>(0)
     const [volume, setVolume] = useState(100)
     const [speed, setSpeed] = useState(1)
 
@@ -39,18 +39,21 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
         wavesurfer.current = WaveSurfer.create({
             container: '#audio',
             backgroundColor: '#F0F2FE',
-            waveColor: '#89B8D3',
-            progressColor: '#C472B5',
-            barWidth: 2,
-            barHeight: 0.7,
+            barWidth: 4,
+            barHeight: 1,
             barGap: 2,
             cursorColor: '#4E485B',
             cursorWidth: 2,
-            height: 48,
+            height: 70,
             responsive: true,
             fillParent: true,
             scrollParent: false,
-            // splitChannels: true,
+            splitChannels: true,
+            splitChannelsOptions: {
+                overlay: true,
+            },
+            normalize: true,
+            skipLength: 0,
             xhr: {
                 requestHeaders: [{
                     key: "Authorization",
@@ -58,26 +61,92 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
                 }]
             }
         });
+
+        // change channel 0 progress color
+        wavesurfer.current.setProgressColor('red', 0);
+        // change channel 1 wave color
+        wavesurfer.current.setWaveColor('blue', 1);
+        // get channel 0 progress color
+        wavesurfer.current.getProgressColor(0);
+
+        wavesurfer.current.drawer.drawBars = function (peaks, channelIndex, start, end) {
+            return customDrawBars(wavesurfer, peaks, channelIndex, start, end);
+        };
+
+        function customDrawBars(wavesurfer, peaks, channelIndex, start, end) {
+
+            return wavesurfer.current.drawer.prepareDraw(peaks, channelIndex, start, end, function (_ref) {
+                const absmax = _ref.absmax,
+                    hasMinVals = _ref.hasMinVals,
+                    height = _ref.height,
+                    offsetY = _ref.offsetY,
+                    halfH = _ref.halfH,
+                    peaks = _ref.peaks,
+                    chInd = _ref.channelIndex;
+
+                // if drawBars was called within ws.empty we don't pass a start and
+                // don't want anything to happen
+                if (start === undefined) {
+                    return;
+                } // Skip every other value if there are negatives.
+
+                const peakIndexScale = hasMinVals ? 2 : 1;
+                const length = peaks.length / peakIndexScale;
+                const bar = wavesurfer.current.params.barWidth * wavesurfer.current.params.pixelRatio;
+                const gap = wavesurfer.current.params.barGap === null ? Math.max(wavesurfer.current.params.pixelRatio, ~~(bar / 2)) : Math.max(wavesurfer.current.params.pixelRatio, wavesurfer.current.params.barGap * wavesurfer.current.params.pixelRatio);
+                const step = bar + gap;
+                const scale = length / wavesurfer.current.drawer.width;
+                const first = start;
+                const last = end;
+
+                const topRatio = 0.5;
+                const bottomRatio = 0.5;
+                const topBottomGap = 1;
+
+                for (let i = first; i < last; i += step) {
+                    const peak = peaks[Math.floor(i * scale * peakIndexScale)] || 0;
+                    const h = Math.abs(Math.round(peak / absmax * height));
+
+                    // Upper bars
+                    let fx = i + wavesurfer.current.drawer.halfPixel;
+                    let fy = (height * topRatio) + offsetY - (h * topRatio);
+                    let fwidth = bar + wavesurfer.current.drawer.halfPixel;
+                    let fheight = h * topRatio;
+
+                    //ЕСЛИ КАНАЛ 0, ТО РИСУЕМ ВЕРХНИЕ ПАЛОЧКИ
+                    if (chInd == 0) {
+                        wavesurfer.current.params.waveColor = '#F088C1'
+                        wavesurfer.current.params.progressColor = '#C472B5'
+                        wavesurfer.current.drawer.fillRect(fx, fy, fwidth, fheight);
+
+                    }
+
+                    // Recalculate for lower bar
+                    fy = (height * topRatio) + offsetY + topBottomGap;
+                    fheight = h * bottomRatio;
+
+                    //ЕСЛИ КАНАЛ 1 ТО РИСУЕМ НИЖНИЕ ПАЛОЧКИ
+                    if (chInd == 1) {
+                        wavesurfer.current.params.waveColor = '#97C5DD'
+                        wavesurfer.current.params.progressColor = '#C472B5'
+                        wavesurfer.current.drawer.fillRect(fx, fy, fwidth, fheight);
+                    }
+                }
+            });
+        }
+
     }, [])
 
     const data = useAppSelector(selectRecordingDetail)
 
     useEffect(() => {
-
+        dispatch(setIsPlaying({recordid: data?.recordid, isPlaying: false}))
         setTrack(data?.path)
-
-        // во время загрузки
-        setDuration("--:--:--")
+        setDuration(timeTransformer(data ? data?.duration : durationFromProps))
+        setIsCopiedLink(false)
 
         track && wavesurfer.current.load(track)
-
-        wavesurfer.current.on('ready', () => {
-            dispatch(setIsPlaying({recordid: data.recordid, isPlaying: false}))
-            setIsReady(true)
-            // const duration = timeTransformer(wavesurfer.current.getDuration())
-            setDuration(timeTransformer(data ? data.duration : durationFromProps))
-            setIsCopiedLink(false)
-        })
+        // wavesurfer.current.load('/middle.mp3')
 
         wavesurfer.current.on('audioprocess', () => {
             const currentTime = timeTransformer(wavesurfer.current.getCurrentTime())
@@ -87,31 +156,43 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
         wavesurfer.current.on('finish', stop)
     }, [track, data])
 
-    // const playPause = async () => {
-    //     await wavesurfer.current.playPause()
-    //     dispatch(setIsPlaying({recordid: data.recordid, isPlaying: !isPlaying}))
-    // }
+    useEffect(() => {
+        wavesurfer.current.on('ready', () => {
+            setIsReady(true)
+        })
+    }, [])
 
     const stop = () => {
         wavesurfer.current.stop()
-        dispatch(setIsPlaying({recordid: data.recordid, isPlaying: false}))
+        dispatch(setIsPlaying({recordid: data?.recordid, isPlaying: false}))
         setCurrentTime("")
     }
 
+    // Изменение громкости
     useEffect(() => {
         wavesurfer.current.setVolume(volume / 100)
     }, [volume])
 
+    // Изменение скорости
     useEffect(() => {
         wavesurfer.current.setPlaybackRate(speed)
     }, [speed])
 
+    // Копирование ссылки
+    const [baseURL, setBaseURL] = useState('')
+    useEffect(() => {
+        const url = window.location.href.split('/').slice(0, 3).join('/')
+        setBaseURL(url)
+    }, [])
 
     const copyLink = () => {
-        copy(track)
+        const fileName = track?.split('/').reverse()[0]
+        console.log(fileName)
+        copy(`${baseURL}/export?fileName=${fileName}`)
         setIsCopiedLink(true)
     }
 
+    // Плэй (пауза)
     useEffect(() => {
         const play = async () => {
             await wavesurfer.current.play()
@@ -120,22 +201,39 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
             await wavesurfer.current.pause()
         }
 
-        !isPlaying ? pause() : play()
+        isPlaying ? play() : pause()
     }, [isPlaying])
+
+    // Скачивание файла
+    const download = async () => {
+        try {
+            const fileName = track.split('/').reverse()[0]
+            await Api().recordings.downloadRecording(fileName)
+        } catch (e) {
+            console.log('Download error:', e)
+        }
+    }
+
+    // Перемотка записи
+    const skip = (direction: 'forward' | 'back') => {
+        let offset = Math.ceil(data?.duration / 60) * 10
+        wavesurfer.current.skip(direction === 'forward' ? offset : -offset)
+    }
 
     return (
         <div className={styles.player}>
-            <div className={styles.player__audio} id="audio"></div>
+            <div className={styles.player__audio} id="audio"/>
             <div className={styles.player__control}>
                 <div className={styles.left}>
                     <img src={!isPlaying ? "/play.svg" : "/pause.svg"} alt="playPause"
-                         onClick={isReady ? () => dispatch(setIsPlaying({
-                             recordid: data.recordid,
-                             isPlaying: !isPlaying
-                         })) : null}/>
+                         onClick={() => (
+                             isReady
+                                 ? dispatch(setIsPlaying({recordid: data.recordid, isPlaying: !isPlaying}))
+                                 : null
+                         )}/>
                     <img src="/stop.svg" alt="stop" onClick={stop}/>
-                    <img src="/prev.svg" alt="prev"/>
-                    <img src="/next.svg" alt="next"/>
+                    <img src="/prev.svg" alt="back" onClick={() => skip('back')}/>
+                    <img src="/next.svg" alt="forward" onClick={() => skip('forward')}/>
                     <input type="range" name="volume" min="0" max="100" step="1" value={volume}
                            className={styles.player__control__volume}
                            onChange={e => setVolume(+e.target.value)}/>
@@ -149,7 +247,7 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
                             styles={{
                                 control: () => ({
                                     border: '2px solid #EEEDF0',
-                                    width: 80,
+                                    width: 84,
                                     height: 22,
                                     display: 'flex',
                                     borderRadius: 6,
@@ -164,21 +262,22 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps}) => {
                     <p className={styles.player__control__time}>{currentTime || '00:00:00'}</p>
                 </div>
                 <div className={styles.right}>
-                    <button
-                        className={isCopiedLink
-                            ? `${styles.player__control__copy} ${styles.player__control__copy_copied}`
-                            : styles.player__control__copy}
-                        onClick={copyLink}>
-                        <img src={!isCopiedLink ? "/copy.svg" : "/copied-success.svg"} alt="copy"/>
-                        {!isCopiedLink ? "Копировать ссылку" : "Скопировано!"}
-
-                    </button>
                     {userData?.Capabilities[0].CanExport === 'true' &&
-                        <button className={styles.player__control__download}>
-                            <img src="/download.svg" alt="download"/>
-                            Скачать mp3
-                        </button>}
-                    <p className={styles.player__control__time}>{isReady ? duration : '--:--:--'}</p>
+                        <>
+                            <button className={isCopiedLink
+                                ? `${styles.player__control__copy} ${styles.player__control__copy_copied}`
+                                : styles.player__control__copy}
+                                    onClick={copyLink}>
+                                <img src={!isCopiedLink ? "/copy.svg" : "/copied-success.svg"} alt="copy"/>
+                                {!isCopiedLink ? "Копировать ссылку" : "Скопировано!"}
+                            </button>
+                            <button onClick={() => download()} className={styles.player__control__download}>
+                                <img src="/download.svg" alt="download"/>
+                                Скачать mp3
+                            </button>
+                        </>
+                    }
+                    <p className={styles.player__control__time}>{duration}</p>
                 </div>
             </div>
         </div>

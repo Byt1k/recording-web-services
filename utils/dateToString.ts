@@ -1,5 +1,6 @@
 const dateToString = (date) => {
-    return date.split('T').join(' ').split('+').slice(0, 1).join(' ')
+    const data = new Date(date)
+    return data.toLocaleString().split(', ').join(' ')
 }
 
 export default dateToString

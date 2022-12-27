@@ -17,43 +17,62 @@ import modalActionStyles from '../styles/modal.module.scss'
 
 const ListRecords = () => {
 
-    let {items: recordings} = useAppSelector(selectSearchedRecordings)
+    const [recordings, setRecordings] = useState([])
+    let {items} = useAppSelector(selectSearchedRecordings)
+
+    useEffect(() => {
+        if (!items.length) {
+            setRecordings(JSON.parse(localStorage.getItem('recordings')))
+        } else {
+            setRecordings(items)
+        }
+    }, [items])
 
     const userData = useAppSelector(selectAuthUserData)
 
-    if (recordings.length) {
-        localStorage.setItem('recordings', JSON.stringify(recordings));
-    }
+    useEffect(() => {
+        if (recordings?.length) {
+            localStorage.setItem('recordings', JSON.stringify(recordings));
+        }
+    }, [recordings?.length])
 
-    recordings = JSON.parse(localStorage.getItem('recordings'))
 
-    recordings = recordings.map(recording => ({
+    const newRecordings = recordings?.map((recording, recordingIndex) => ({
         ...recording,
+        number: recordingIndex + 1,
         starttime: dateToString(recording.starttime),
         stoptime: dateToString(recording.stoptime),
         duration: timeTransformer(recording.duration),
-        dependencies: recording.dependencies?.map(d => (
+        dependencies: recording.dependencies?.map((d, dIndex) => (
             {
                 ...d,
+                number: `${recordingIndex + 1}.${dIndex + 1}`,
                 starttime: dateToString(d.starttime),
                 stoptime: dateToString(d.stoptime),
                 duration: timeTransformer(d.duration),
             }))
     }))
 
-    const currentPageDefault = +localStorage.getItem('currentPage') || 1
-
+    // Пэйджинг
+    const [currentPage, setCurrentPage] = useState(1)
     const [pageSize, setPageSize] = useState(10)
-    const [currentPage, setCurrentPage] = useState(currentPageDefault)
-    const totalCount = recordings.length
+    const totalCount = newRecordings?.length
 
     const lastIndex = currentPage * pageSize
     const firstIndex = lastIndex - pageSize
-    const visibleRecordings = recordings.slice(firstIndex, lastIndex)
+    const visibleRecordings = newRecordings?.slice(firstIndex, lastIndex)
+
+    useEffect(() => {
+        setCurrentPage(+localStorage.getItem('currentPage'))
+
+        const pageSizeFromLS = +localStorage.getItem('pageSize')
+        pageSizeFromLS && setPageSize(pageSizeFromLS)
+    }, [])
 
     useEffect(() => {
         localStorage.setItem('currentPage', currentPage.toString())
     }, [currentPage])
+
 
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
 
@@ -65,7 +84,10 @@ const ListRecords = () => {
     };
 
     // Выбор акивного трэка
-    const [selectedTrackId, setSelectedTrackId] = useState("")
+
+    const loadedTrack = useAppSelector(selectRecordingIsPlaying)
+    const [selectedTrackId, setSelectedTrackId] = useState(loadedTrack.recordid)
+
     const trackIsActive = (track, className) => {
         return selectedTrackId !== track.recordid
             ? `${className}`
@@ -88,7 +110,7 @@ const ListRecords = () => {
     // Выбор столбцов
     const {register, handleSubmit, formState, reset, control} = useForm()
 
-    const businessAttributes = userData.BusinessAttributes[0]
+    const businessAttributes = userData?.BusinessAttributes[0]
 
     // Сортировака выбора столбцов по алфавиту
     const sortableBusinessAttributes = [];
@@ -111,12 +133,16 @@ const ListRecords = () => {
         setPopupSelectColumns(false)
     }
 
-    const businessAttributesKeys = Object.keys(businessAttributes)
+    const businessAttributesKeys = Object.keys(businessAttributes || {})
 
     // Сортировка столбцов
     type SortConfig = { key: string | null, direction: 'ascending' | 'descending' }
     const [sortConfig, setSortConfig] = useState<SortConfig>({key: null, direction: 'ascending'})
-    let sortedVisibleRecordings = [...visibleRecordings];
+    let sortedVisibleRecordings = [];
+
+    if (visibleRecordings?.length) {
+        sortedVisibleRecordings = [...visibleRecordings]
+    }
 
     sortedVisibleRecordings.sort((a, b) => {
         if (a[sortConfig.key] < b[sortConfig.key]) {
@@ -136,11 +162,6 @@ const ListRecords = () => {
         setSortConfig({key, direction});
     }
 
-    const sortBtn = document.querySelector('.sorted')
-    if (sortBtn) {
-        sortConfig.direction === 'descending' ? sortBtn.className = 'sorted rotate' : sortBtn.className = 'sorted'
-    }
-
     const {isPlaying, recordid: playingRecordId} = useAppSelector(selectRecordingIsPlaying)
     const showPlayPauseImg = (recordId) => {
         if (isPlaying && playingRecordId === recordId) {
@@ -150,13 +171,20 @@ const ListRecords = () => {
         }
     }
 
+    const sortedArrowClassName = (sortConfig, key) => {
+        if (sortConfig.key === key) {
+            if (sortConfig.direction === 'descending') {
+                return 'sorted rotate'
+            }
+            return 'sorted'
+        }
+        return ''
+    }
+
     return (
         <>
-            <TitlePage isListRecordsPage={true}
-                       title="Список записей"
-                       selectedTrackId={selectedTrackId}
-                       setPageSize={setPageSize}
-                       pageSize={pageSize}
+            <TitlePage isListRecordsPage={true} title="Список записей" selectedTrackId={selectedTrackId}
+                       setPageSize={setPageSize} pageSize={pageSize} setCurrentPage={setCurrentPage}
                        setPopupSelectColumns={setPopupSelectColumns}
             />
             <div className={styles.listContainer}>
@@ -164,13 +192,14 @@ const ListRecords = () => {
                     <thead>
                     <tr>
                         <td width={20}/>
+                        <td width={40}>№</td>
                         {businessAttributesKeys.map(key => {
                             if (selectedColumns.some(c => c === key)) {
                                 return (
                                     <td key={key}>
                                         <button
                                             onClick={() => requestSort(key)}
-                                            className={sortConfig.key === key ? 'sorted' : 'asd'}
+                                            className={sortedArrowClassName(sortConfig, key)}
                                         >{businessAttributes[key]}</button>
                                     </td>
                                 )
@@ -179,7 +208,7 @@ const ListRecords = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {sortedVisibleRecordings.map((r, index) => {
+                    {sortedVisibleRecordings.map(r => {
 
                         // парсинг метадаты
                         const metaData: any = {}
@@ -205,12 +234,16 @@ const ListRecords = () => {
                                             }
                                         />
                                         : null}
-                                    <button onClick={() => dispatch(setIsPlaying({recordid: r.recordid, isPlaying: !isPlaying}))}
+                                    <button onClick={() => dispatch(setIsPlaying({
+                                        recordid: r.recordid,
+                                        isPlaying: !isPlaying
+                                    }))}
                                             disabled={r.recordid !== selectedTrackId}>
                                         <img src={showPlayPauseImg(r.recordid)}
                                              alt="playPause"/>
                                     </button>
                                 </td>
+                                <td width={40}>{r.number}</td>
                                 {businessAttributesKeys.map(key => {
                                     if (selectedColumns.some(c => c === key)) {
                                         return (
@@ -233,12 +266,16 @@ const ListRecords = () => {
                                         onClick={() => setSelectedTrackId(d.recordid)}
                                     >
                                         <td>
-                                            <button onClick={() => dispatch(setIsPlaying({recordid: d.recordid, isPlaying: !isPlaying}))}
+                                            <button onClick={() => dispatch(setIsPlaying({
+                                                recordid: d.recordid,
+                                                isPlaying: !isPlaying
+                                            }))}
                                                     disabled={d.recordid !== selectedTrackId}>
                                                 <img src={showPlayPauseImg(d.recordid)}
                                                      alt="playPause"/>
                                             </button>
                                         </td>
+                                        <td width={40}>{d.number}</td>
                                         {businessAttributesKeys.map(key => {
                                             if (selectedColumns.some(c => c === key)) {
                                                 return (
@@ -256,7 +293,7 @@ const ListRecords = () => {
             </div>
             <div className={styles.info}>
                 <div className={styles.shown}>
-                     Показано <b>{visibleRecordings.length}</b> из <b>{recordings.length}</b> результатов
+                    Показано <b>{visibleRecordings?.length || 0}</b> из <b>{newRecordings?.length || 0}</b> результатов
                 </div>
                 <Pagination pageSize={pageSize} totalCount={totalCount} currentPage={currentPage}
                             onChangePage={setCurrentPage}/>

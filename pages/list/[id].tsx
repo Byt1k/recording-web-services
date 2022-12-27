@@ -3,61 +3,76 @@ import styles from '../../styles/common.module.scss'
 import dynamic from 'next/dynamic'
 import Information from "../../components/Information";
 import {Api} from "../../api";
-import {GetServerSidePropsContext, NextPage} from "next";
-import {RecordingItem} from "../../api/types";
-import {useEffect, useState} from "react";
+import {useEffect} from "react";
 import {useRouter} from "next/router";
-import {log} from "util";
+import {useAppDispatch, useAppSelector} from "../../redux/hooks";
+import {selectRecordingDetail, setRecordingDetail} from "../../redux/slices/recordingDetail";
+import {selectAuthUserData} from "../../redux/slices/auth";
 
 const Player = dynamic(
     () => import('../../components/Player'),
     {ssr: false}
 )
 
-interface InformationProps {
-    recordingDetail: RecordingItem | null
-}
+const RecordingDetailPage = () => {
 
-const RecordingDetailPage: NextPage<InformationProps> = ({recordingDetail}) => {
+    const dispatch = useAppDispatch()
+    const router = useRouter()
 
-    // const [recordingDetail, setRecordingDetail] = useState()
-    // const router = useRouter()
-    // const recordingId = router.query.id
-    // useEffect(() => {
-    //     const fetchData = async (recordingId) => {
-    //         const recordingDetail = await Api().recordings.getRecordingDetail(recordingId)
-    //         setRecordingDetail(recordingDetail.items[0])
-    //     }
-    //     fetchData(recordingId)
-    // }, [recordingId])
+    const recordingId = router.query.id as string
 
-    // const recordingDetail = useAppSelector(selectRecordingDetail)
-    // console.log(recordingDetail)
+    useEffect(() => {
+        const fetchData = async (recordingId) => {
+            const recordingDetail = await Api().recordings.getRecordingDetail(recordingId)
+            dispatch(setRecordingDetail(recordingDetail.items[0]))
+        }
+        recordingId ? fetchData(recordingId) : null
+    }, [recordingId])
+
+    const recordingDetail = useAppSelector(selectRecordingDetail)
+
+    const userData = useAppSelector(selectAuthUserData)
+
+    if (userData?.Capabilities[0].CanDetailView === 'false') {
+        return (
+            <>
+                <div>У Вас нет прав на просмотр страницы взаимодействия</div>
+                <style jsx>{`
+                  div {
+                    height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                  }
+                `}</style>
+            </>
+        )
+    }
 
     return (
         <>
             <Header isInteraction={true}/>
             <div className={styles.container}>
-                <Player pathFromProps={recordingDetail.path} durationFromProps={recordingDetail.duration}/>
+                <Player pathFromProps={recordingDetail?.path} durationFromProps={recordingDetail?.duration}/>
                 <Information recordingDetail={recordingDetail}/>
             </div>
         </>
     );
 };
 
-export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-    try {
-        const recordingId = ctx.query.id as string
-        const recordingDetail = await Api(ctx).recordings.getRecordingDetail(recordingId)
+// export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
+//     try {
+//         const recordingId = ctx.query.id as string
+//         const recordingDetail = await Api(ctx).recordings.getRecordingDetail(recordingId)
 
-        // todo: may be remove reducer recordingDetail
-        // store.dispatch(setRecordingDetail(recordingDetail))
+//         // todo: may be remove reducer recordingDetail
+//         // store.dispatch(setRecordingDetail(recordingDetail))
 
-        return {props: {recordingDetail: recordingDetail.items[0]}}
-    } catch (e) {
-        console.log(e)
-    }
-    return {props: {recordingDetail: null}}
-}
+//         return {props: {recordingDetail: recordingDetail.items[0]}}
+//     } catch (e) {
+//         console.log(e)
+//     }
+//     return {props: {recordingDetail: null}}
+// }
 
 export default RecordingDetailPage;

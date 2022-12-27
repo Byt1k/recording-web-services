@@ -6,7 +6,10 @@ export const authApi = (instance: AxiosInstance) =>  ({
             .then(res => res.data.token)
         return token
     },
-
+    async logout() {
+        const data = await instance.post('v1/logout')
+        return data
+    },
     async getMe() {
         const {data} = await instance.get('recordings/v1/interfacedata')
         return data

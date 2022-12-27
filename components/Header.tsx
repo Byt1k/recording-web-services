@@ -49,21 +49,28 @@ const Header: React.FC<HeaderProps> = ({
     }, [exitIsActive, setExitIsActive])
 
     const dispatch = useAppDispatch()
+    const router = useRouter()
 
     const exit = async () => {
-        destroyCookie(null, "rwsAuthToken")
-        dispatch(setAuthUserData(null))
-        Router.replace('/login')
+        try {
+            await Api().auth.logout()
+            destroyCookie(null, "rwsAuthToken")
+            dispatch(setAuthUserData(null))
+            localStorage.clear()
+            await router.push('/login')
+        } catch (e) {
+            console.log('Logout error: ', e)
+        }
     }
 
-    const router = useRouter()
+    const [recordingDeletedPopup, setRecordingDeletedPopup] = useState(false)
 
     const deleteRecording = async (recordingId) => {
         try {
             const data = await Api().recordings.deleteRecording(recordingId)
-            if (data.code === 0) {
+            if (data.status === 200) {
                 setPopupDelete(false)
-                //todo: Сообщение 'запись удалена' и редирект
+                setRecordingDeletedPopup(true)
             }
         } catch (e) {
             console.log(e)
@@ -74,7 +81,7 @@ const Header: React.FC<HeaderProps> = ({
         <>
             <header className={styles.header}>
                 <div className={styles.container}>
-                    <Link href='/'>
+                    <Link href={userData ? '/' : '/login'}>
                         <img src='/logo.svg' alt="Logo"/>
                     </Link>
                     {userData && <>
@@ -111,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
                             </button>
                         </>}
                         {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
-                        {isInteraction && userData.Capabilities[0].CanDelete === "true" &&
+                        {isInteraction && userData?.Capabilities[0].CanDelete === "true" &&
                             <button className={styles.header__action__reset}
                                     onClick={() => setPopupDelete(true)}>
                                 <img src="/reset.svg" alt="reset"/>
@@ -133,6 +140,15 @@ const Header: React.FC<HeaderProps> = ({
                     <button className={modalStyles.negative} onClick={() => deleteRecording(router.query.id)}>
                         Удалить
                     </button>
+                </div>
+            </Modal>
+            <Modal active={recordingDeletedPopup} setActive={setRecordingDeletedPopup} title='Запись удалена'>
+                <div className={`${modalStyles.modal__content__action} ${modalStyles.modal__content_blue}`}
+                     style={{justifyContent: 'center'}}>
+                    <button className={modalStyles.positive} onClick={() => {
+                        setRecordingDeletedPopup(false)
+                        router.push('/list')
+                    }}>Ок</button>
                 </div>
             </Modal>
         </>

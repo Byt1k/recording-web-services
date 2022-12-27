@@ -1,0 +1,59 @@
+variables:
+  IMAGE_TAG: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_SHORT_SHA
+  IMAGE_TAG_LATEST: $CI_REGISTRY/$CI_PROJECT_PATH:latest
+
+stages:
+  - build
+  - test
+  - deploy-dev
+
+before_script:
+  - echo "Start time:" `date`
+  - echo "Build name $CI_BUILD_NAME, Branch $CI_BUILD_REF_NAME, Stage $CI_BUILD_STAGE, Pipeline IID $CI_PIPELINE_IID"
+  - echo $DOCKER_TOKEN | docker login -u migunov --password-stdin $CI_REGISTRY
+after_script:
+  - echo "End time:" `date`
+
+Build:
+  stage: build
+  image: docker
+  services:
+    - docker:dind
+  script:
+    - docker build -f Dockerfile -t $IMAGE_TAG_LATEST .
+    - docker push $IMAGE_TAG_LATEST
+  tags:
+    - "zalogoff"
+  only:
+    - master
+
+Test:
+  stage: test
+  image: docker
+  services:
+    - docker:dind
+  script:
+    - docker run $IMAGE_TAG_LATEST /bin/sh -c "node -v"
+    - docker run $IMAGE_TAG_LATEST /bin/sh -c "npm -v"
+  tags:
+    - "zalogoff"
+  only:
+    - master
+
+DeployDev:
+  stage: deploy-dev
+  image: alpine
+  before_script:
+    - "which ssh-agent || (apk add --update --no-cache openssh-client)"
+    - eval $(ssh-agent -s)
+    - mkdir -p ~/.ssh
+    - echo "$SSH_DEV_PRIVATE_KEY" >> ~/.ssh/id_ed25519
+    - chmod -R 600 ~/.ssh
+    - ssh-add ~/.ssh/id_ed25519
+    - ssh-keyscan -H $DEV_HOST >> ~/.ssh/known_hosts
+  script:
+    - ssh "gitlab-runner@$DEV_HOST" "/www/rws/deploy.sh $DOCKER_TOKEN $CI_REGISTRY $IMAGE_TAG_LATEST"
+  tags:
+    - "zalogoff"
+  only:
+    - master

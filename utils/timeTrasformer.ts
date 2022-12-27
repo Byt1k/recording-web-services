@@ -1,4 +1,4 @@
-const timeTransformer = (date) => {
+const timeTransformer = (date: number) => {
     const hours = Math.floor(date / 3600)
     const minutes = Math.floor(date / 60) - (hours * 60)
     const seconds = Math.floor(date % 60)

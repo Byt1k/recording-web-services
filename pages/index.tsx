@@ -12,28 +12,42 @@ import {setRecordings} from "../redux/slices/recordings";
 import TitlePage from "../components/TitlePage";
 import Select from "react-select";
 import modalStyles from "../styles/modal.module.scss";
+import dateToISO from "../utils/dateToISO";
+import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
+import {faTrashCan} from "@fortawesome/free-regular-svg-icons";
 
 const Player = dynamic(
     () => import('../components/Player'),
     {ssr: false}
 )
 
-
 const Index = () => {
 
     const [error, setError] = useState(null)
-
 
     // Очистка поиска
     const [popupResetFilter, setPopupResetFilter] = useState(false)
 
     const defaultValues = {
-        'mediatype': '',
+        starttime: '',
+        stoptime: '',
+        minDuration: '',
+        maxDuration: '',
+        mediatype: '',
         'metadataQuery.Project': '',
-        'type': '',
+        type: '',
+        'metadataQuery.businessResult': '',
         'metadataQuery.serviceType': '',
         'metadataQuery.serviceName': '',
-        'additionalParams.p_1.name': ''
+        'metadataQuery.serviceTask': '',
+        'metadataQuery.caseId': '',
+        externalDN: '',
+        localDN: '',
+        username: '',
+        'metadataQuery.CustomerType': '',
+        'additionalParams.p_1.name': '',
+        'additionalParams.p_1.not': '',
+        'additionalParams.p_1.value': ''
     }
 
     const resetFilter = () => {
@@ -73,27 +87,36 @@ const Index = () => {
     }
 
 
-    const initialAdditionalParams = [
-        {
-            id: 1,
-            name: "",
-            value: "",
-            not: false
-        }
-    ]
+    // Дополнительные поля для поиска
+    const [additionalParamId, setAdditionalParamId] = useState(1)
+
+    const initialAdditionalParams = [{
+        id: additionalParamId,
+        name: "",
+        value: ""
+    }]
+
     const [additionalParams, setAdditionalParams] = useState(initialAdditionalParams)
 
-    const AddAdditionalParam = () => {
+    const addAdditionalParam = () => {
+        setAdditionalParamId(additionalParamId + 1)
         setAdditionalParams([
             ...additionalParams,
             {
-                id: additionalParams.length + 1,
+                id: additionalParamId + 1,
                 name: "",
-                value: "",
-                not: false
+                value: ""
             }
         ])
     }
+
+    const deleteAdditionalParam = (id) => {
+        setAdditionalParams(() => (
+            additionalParams.filter(param => param.id !== id)
+        ))
+    }
+    //
+
 
     const [inputDateFromColor, setInputDateFromColor] = useState("#C8C8C8")
     const [inputDateToColor, setInputDateToColor] = useState("#C8C8C8")
@@ -120,6 +143,9 @@ const Index = () => {
             // Добавление в метадату дополнительных параметров
             const {additionalParams} = dto
             for (const param in additionalParams) {
+                if (!additionalParams[param].not) {
+                    additionalParams[param].not = 'false'
+                }
                 if (additionalParams[param].name) {
                     metaData.push(additionalParams[param])
                 }
@@ -127,8 +153,13 @@ const Index = () => {
             delete dto.additionalParams
             metaData = metaData.filter(item => item)
 
+            // Обработка даты
+            let {starttime, stoptime} = dto
+            starttime = dateToISO(starttime)
+            stoptime = dateToISO(stoptime)
+
             // Формирование окончательного запроса (удаление пустых полей)
-            const preData = {...dto, metadataQuery: metaData}
+            const preData = {...dto, metadataQuery: metaData, starttime, stoptime}
             let dataQuery: dataQuery = {}
 
             Object.keys(preData).map(key => {
@@ -141,17 +172,14 @@ const Index = () => {
                 delete dataQuery.metadataQuery
             }
 
-            // console.log(dataQuery)
-
             // Отправка запроса
             const data = await Api().recordings.search(dataQuery)
             dispatch(setRecordings(data))
             setError(null)
             router.push('/list')
         } catch (e) {
-            if (e.response.status === 404) {
-                setError('Записи не найдены')
-            }
+            console.log(e)
+            setError('Записи не найдены')
         }
     }
 
@@ -163,7 +191,7 @@ const Index = () => {
     let serviceTypesOptions = setDefaultOption('Все типы')
     let typesOptions = setDefaultOption('Все направления')
 
-    const parseMetadataValues = (values: {name: string, displayName: string}[]) => (
+    const parseMetadataValues = (values: { name: string, displayName: string }[]) => (
         values.map(v => ({value: v.name, label: v.displayName}))
     )
 
@@ -195,11 +223,13 @@ const Index = () => {
         additionalParamsOptions.push({value: i, label: i})
     })
 
+    const canStandartForm = userData?.Capabilities[0].CanStandartForm === 'true'
+
     return (
         <>
             <Header isSearchAction={true} setPopupResetFilter={setPopupResetFilter}/>
             <div className={styles.container}>
-                <Player />
+                <Player/>
                 <>
                     <TitlePage title="Поиск записей" isSearch={true}/>
                     <form onSubmit={handleSubmit(onSubmit)} className={styles.main} id="main-form">
@@ -279,46 +309,50 @@ const Index = () => {
                                        placeholder='Введите результат'/>
                             </div>
                         </div>
-                        <div className={`${styles.main__item} ${styles.main__item_50p}`}>
-                            <h3>Информация по услуге</h3>
-                            <div>
-                                <Controller name='metadataQuery.serviceType'
-                                            control={control}
-                                            render={({field: {onChange, value}}) => (
-                                                <Select
-                                                    options={serviceTypesOptions}
-                                                    instanceId="serviceType"
-                                                    placeholder='Введите тип услуги'
-                                                    styles={selectStyles}
-                                                    components={selectComponents}
-                                                    theme={selectTheme}
-                                                    value={serviceTypesOptions.find(c => c.value === value)}
-                                                    onChange={val => onChange(val.value)}
-                                                />
-                                            )}
-                                />
-                                <Controller name='metadataQuery.serviceName'
-                                            control={control}
-                                            render={({field: {onChange, value}}) => (
-                                                <Select
-                                                    options={serviceNamesOptions}
-                                                    instanceId="serviceName"
-                                                    placeholder='Название услуги'
-                                                    styles={selectStyles}
-                                                    components={selectComponents}
-                                                    theme={selectTheme}
-                                                    value={serviceNamesOptions.find(c => c.value === value)}
-                                                    onChange={val => onChange(val.value)}
-                                                />
-                                            )}
-                                />
-                                <input type="text" {...register('metadataQuery.serviceTask')} placeholder='Название задачи'/>
-                                <input type="text" {...register('metadataQuery.caseId')} placeholder='Номер задачи'/>
-                            </div>
-                        </div>
-                        <div className={`${styles.main__item} ${styles.main__item_50p}`}>
+                        {canStandartForm &&
+                            <div className={`${styles.main__item} ${styles.main__item_50p}`}>
+                                <h3>Информация по услуге</h3>
+                                <div>
+                                    <Controller name='metadataQuery.serviceType'
+                                                control={control}
+                                                render={({field: {onChange, value}}) => (
+                                                    <Select
+                                                        options={serviceTypesOptions}
+                                                        instanceId="serviceType"
+                                                        placeholder='Введите тип услуги'
+                                                        styles={selectStyles}
+                                                        components={selectComponents}
+                                                        theme={selectTheme}
+                                                        value={serviceTypesOptions.find(c => c.value === value)}
+                                                        onChange={val => onChange(val.value)}
+                                                    />
+                                                )}
+                                    />
+                                    <Controller name='metadataQuery.serviceName'
+                                                control={control}
+                                                render={({field: {onChange, value}}) => (
+                                                    <Select
+                                                        options={serviceNamesOptions}
+                                                        instanceId="serviceName"
+                                                        placeholder='Название услуги'
+                                                        styles={selectStyles}
+                                                        components={selectComponents}
+                                                        theme={selectTheme}
+                                                        value={serviceNamesOptions.find(c => c.value === value)}
+                                                        onChange={val => onChange(val.value)}
+                                                    />
+                                                )}
+                                    />
+                                    <input type="text" {...register('metadataQuery.serviceTask')}
+                                           placeholder='Название задачи'/>
+                                    <input type="text" {...register('metadataQuery.caseId')}
+                                           placeholder='Номер задачи'/>
+                                </div>
+                            </div>}
+                        <div
+                            className={`${styles.main__item} ${canStandartForm ? styles.main__item_50p : styles.main__item_25p}`}>
                             <h3>Номера телефонов</h3>
-                            <div>
+                            <div style={canStandartForm ? {} : {gridTemplateColumns: '1fr'}}>
                                 <input type="text" {...register('externalDN')} placeholder='Номер клиента'/>
                                 <input type="text" {...register('localDN')} placeholder='Номер агента'/>
                             </div>
@@ -327,51 +361,69 @@ const Index = () => {
                             <h3>Агенты</h3>
                             <input type="text" {...register('username')} placeholder='Введите имя агента'/>
                         </div>
-                        <div className={`${styles.main__item} ${styles.main__item_25p}`}>
-                            <h3>Информация по клиенту</h3>
-                            <input type="text" {...register('metadataQuery.CustomerType')} placeholder='Введите тип клиента'/>
-                        </div>
-                        <div className={`${styles.main__item}`}>
-                            <h3>Дополнительные данные для поиска</h3>
-                            {additionalParams.map((param, index) => {
-                                return (
-                                    <div key={param.id} className={styles.additionalParam}>
-                                        <Controller name={`additionalParams.p_${index + 1}.name`}
-                                                    control={control}
-                                                    render={({field: {onChange, value}}) => (
-                                                        <Select
-                                                            className={styles.additionalParam__name}
-                                                            options={additionalParamsOptions}
-                                                            instanceId={`param` + index}
-                                                            placeholder='Введите параметр'
-                                                            styles={selectStyles}
-                                                            components={selectComponents}
-                                                            theme={selectTheme}
-                                                            value={additionalParamsOptions.find(c => c.value === value)}
-                                                            onChange={val => onChange(val.value)}
-                                                        />
-                                                    )}
-                                        />
-                                        <input type="text"
-                                               {...register(`additionalParams.p_${index + 1}.value`)}
-                                               placeholder='Введите значение'
-                                               className={styles.additionalParam__value}
-                                               defaultValue={param.value}
-                                            // onChange={e => onChangeAddParam(param.id, 'value', e.target.value)}
-                                        />
-                                        <label className={styles.additionalParam__checkbox}>
-                                            <input type="checkbox"
-                                                   {...register(`additionalParams.p_${index + 1}.not`)}
-                                                // defaultChecked={!!param.isOn}
-                                                // onChange={e => onChangeAddParam(param.id, 'isOn', e.target.checked)}
+                        {canStandartForm &&
+                            <div className={`${styles.main__item} ${styles.main__item_25p}`}>
+                                <h3>Информация по клиенту</h3>
+                                <input type="text" {...register('metadataQuery.CustomerType')}
+                                       placeholder='Введите тип клиента'/>
+                            </div>}
+                        {canStandartForm &&
+                            <div className={`${styles.main__item}`}>
+                                <h3>Дополнительные данные для поиска</h3>
+                                {additionalParams.map((param, index) => {
+                                    return (
+                                        <div key={param.id} className={styles.additionalParam}>
+                                            <Controller name={`additionalParams.p_${index + 1}.name`}
+                                                        control={control}
+                                                        render={({field: {onChange, value}}) => (
+                                                            <Select
+                                                                className={styles.additionalParam__name}
+                                                                options={additionalParamsOptions}
+                                                                instanceId={`param` + index}
+                                                                placeholder='Введите параметр'
+                                                                styles={selectStyles}
+                                                                components={selectComponents}
+                                                                theme={selectTheme}
+                                                                value={additionalParamsOptions.find(c => c.value === value)}
+                                                                onChange={val => onChange(val.value)}
+                                                            />
+                                                        )}
                                             />
-                                            {param.not ? "Включено" : "Отключено"}
-                                        </label>
-                                    </div>
-                                )
-                            })}
-                            <div style={{cursor: 'pointer'}} onClick={AddAdditionalParam} className={styles.addAdditionalParam}>+ Добавить</div>
-                        </div>
+                                            <Controller name={`additionalParams.p_${index + 1}.not`}
+                                                        control={control}
+                                                        render={({field: {onChange, value}}) => (
+                                                            <Select
+                                                                className={styles.additionalParam__not}
+                                                                options={[
+                                                                    {value: 'false', label: 'Равно'},
+                                                                    {value: 'true', label: 'Не равно'}
+                                                                ]}
+                                                                defaultValue={{value: 'false', label: 'Равно'}}
+                                                                instanceId={`param` + index}
+                                                                styles={selectStyles}
+                                                                components={selectComponents}
+                                                                theme={selectTheme}
+                                                                value={additionalParamsOptions.find(c => c.value === value)}
+                                                                onChange={val => onChange(val.value)}
+                                                            />
+                                                        )}
+                                            />
+                                            <input type="text" {...register(`additionalParams.p_${index + 1}.value`)}
+                                                   placeholder='Введите значение'
+                                                   className={styles.additionalParam__value}
+                                            />
+                                            {!!index && <FontAwesomeIcon icon={faTrashCan}
+                                                                         className={styles.additionalParam__delete}
+                                                                         onClick={() => deleteAdditionalParam(param.id)}
+                                            />}
+                                        </div>
+                                    )
+                                })}
+                                <div style={{cursor: 'pointer'}} onClick={addAdditionalParam}
+                                     className={styles.addAdditionalParam}>+ Добавить
+                                </div>
+                            </div>
+                        }
                     </form>
                 </>
             </div>
@@ -392,8 +444,8 @@ const Index = () => {
     )
 
     type dataQuery = {
-        starttime?:string,
-        stoptime?:string,
+        starttime?: string,
+        stoptime?: string,
         maxDuration?: string,
         minDuration?: string,
         username?: string,
@@ -405,7 +457,7 @@ const Index = () => {
         additionalParams?: any
     }
 
-    type metadataQuery = {not: boolean, name: string, value: string}[]
+    type metadataQuery = { not: boolean, name: string, value: string }[]
 };
 
 export default Index;

@@ -50,7 +50,7 @@ export interface ResponseAuth {
 export interface RecordingItem {
     record_count: number
     callId: string,
-    duration: number | string,
+    duration: number,
     externalDN: string,
     localDN: string,
     metadata: Array<any>,

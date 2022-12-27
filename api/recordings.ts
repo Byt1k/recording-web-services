@@ -31,7 +31,20 @@ export const recordingsApi = (instance: AxiosInstance) => ({
     //     return data
     // }
     async deleteRecording(recordingId: string) {
-        const {data} = await instance.delete(`recordings/v1/${recordingId}`)
+        const data = await instance.delete(`recordings/v1/${recordingId}`)
         return data
+    },
+    async downloadRecording(fileName: string) {
+        const response = await instance.get(`recordings/v1/recordfiles/${fileName}`, {responseType: 'blob'})
+        if (response.status === 200) {
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.download = fileName
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+        }
+        return response
     }
 })

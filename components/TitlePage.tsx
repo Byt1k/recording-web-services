@@ -1,11 +1,12 @@
 import Link from "next/link";
 import styles from '../styles/titlePage.module.scss'
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {Field, Form, Formik} from "formik";
 import Modal from "./Modal";
 import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
 import modalStyles from "../styles/modal.module.scss";
+import {useRouter} from "next/router";
 
 interface PropsType {
     title: string,
@@ -15,7 +16,8 @@ interface PropsType {
     selectedTrackId?: string,
     setPageSize?: (size: number) => void
     pageSize?: number
-    setPopupSelectColumns?: (value: boolean) => void
+    setPopupSelectColumns?: (value: boolean) => void,
+    setCurrentPage?: (value: number) => void
 }
 
 const TitlePage: React.FC<PropsType> = ({
@@ -26,7 +28,8 @@ const TitlePage: React.FC<PropsType> = ({
                                             selectedTrackId,
                                             setPageSize,
                                             pageSize,
-                                            setPopupSelectColumns
+                                            setPopupSelectColumns,
+                                            setCurrentPage
                                         }) => {
 
     const [popupSaveFilter, setPopupSaveFilter] = useState(false)
@@ -40,6 +43,13 @@ const TitlePage: React.FC<PropsType> = ({
         setPopupSaveFilter(false)
     }
 
+    // Проверка есть ли записи в localstorage, чтобы показать кнопку
+    const [backToListVisible, setBackToListVisible] = useState(false)
+    useEffect(() => {
+        const recordings = JSON.parse(localStorage.getItem('recordings'))
+        setBackToListVisible(!!recordings)
+    }, [])
+
     return (
         <>
             <div className={styles.title}>
@@ -48,13 +58,17 @@ const TitlePage: React.FC<PropsType> = ({
                     <p>Записей на странице</p>
                     {possibleListPageSize.map(size => (
                         <button key={size} className={size === pageSize ? styles.active : ""}
-                                onClick={() => setPageSize(size)}
+                                onClick={() => {
+                                    setPageSize(size)
+                                    setCurrentPage(1)
+                                    localStorage.setItem('pageSize', size.toString())
+                                }}
                         >{size}</button>
                     ))}
                 </div>}
                 {isListRecordsPage && <div className={styles.title__actions}>
-                    {userData.Capabilities[0].CanDetailView === 'true' && <Link href={`/list/${selectedTrackId}`}
-                                                                                className={styles.title__actions__btn_outline}>Взаимодействие</Link>}
+                    {userData?.Capabilities[0].CanDetailView === 'true'
+                        && <Link href={`/list/${selectedTrackId}`} className={styles.title__actions__btn_outline}>Взаимодействие</Link>}
                     <button
                         className={styles.title__actions__btn_outline}
                         onClick={() => setPopupSelectColumns(true)}
@@ -63,7 +77,7 @@ const TitlePage: React.FC<PropsType> = ({
                     </button>
                     <Link href="/" className={styles.title__actions__btn_fill}>
                         {/*<span className={styles.count}>5</span>*/}
-                        Фильтр
+                        Вернуться к поиску
                     </Link>
                 </div>}
                 {isSearch && <div className={styles.title__actions}>
@@ -71,6 +85,8 @@ const TitlePage: React.FC<PropsType> = ({
                             onClick={() => setPopupSaveFilter(true)}>Сохранить фильтр
                     </button>
                     <Link href="/filters" className={styles.title__actions__btn_fill}>Выбрать фильтр</Link>
+                    {backToListVisible
+                        && <Link href="/list" className={styles.title__actions__btn_fill}>Вернуться к списку</Link>}
                 </div>}
                 {isInteraction && <div className={styles.title__actions}>
                     <Link href="/list" className={styles.title__actions__btn_outline}>Вернуться к списку</Link>
