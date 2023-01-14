@@ -9,13 +9,10 @@ import {selectAuthUserData} from "../redux/slices/auth";
 import {parseCookies} from "nookies";
 import {selectRecordingDetail, selectRecordingIsPlaying, setIsPlaying} from "../redux/slices/recordingDetail";
 import {Api} from "../api";
+import {CircularProgressbar} from "react-circular-progressbar";
+import 'react-circular-progressbar/dist/styles.css';
 
-interface PlayerProps {
-    pathFromProps?: string,
-    durationFromProps?: number
-}
-
-const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) => {
+const Player = () => {
     const wavesurfer = useRef(null)
     const [track, setTrack] = useState('')
     const [isReady, setIsReady] = useState(false)
@@ -23,6 +20,7 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
     const [duration, setDuration] = useState<string | number>(0)
     const [volume, setVolume] = useState(100)
     const [speed, setSpeed] = useState(1)
+    const [loadingProgress, setLoadingProgress] = useState(0)
 
     const [isCopiedLink, setIsCopiedLink] = useState(false)
 
@@ -137,16 +135,17 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
 
     }, [])
 
+    // Получение информации о выбранном трэке
     const data = useAppSelector(selectRecordingDetail)
 
+    // Загрузка трэка
     useEffect(() => {
         dispatch(setIsPlaying({recordid: data?.recordid, isPlaying: false}))
         setTrack(data?.path)
-        setDuration(timeTransformer(data ? data?.duration : durationFromProps))
+        setDuration(timeTransformer(data?.duration || 0))
         setIsCopiedLink(false)
 
         track && wavesurfer.current.load(track)
-        // wavesurfer.current.load('/middle.mp3')
 
         wavesurfer.current.on('audioprocess', () => {
             const currentTime = timeTransformer(wavesurfer.current.getCurrentTime())
@@ -156,12 +155,18 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
         wavesurfer.current.on('finish', stop)
     }, [track, data])
 
+    // Подписка на процесс загрузки и готовность трэка
     useEffect(() => {
+        wavesurfer.current.on('loading', (progress) => {
+            setLoadingProgress(progress)
+        })
+
         wavesurfer.current.on('ready', () => {
             setIsReady(true)
         })
     }, [])
 
+    // Остановка трэка (не пауза)
     const stop = () => {
         wavesurfer.current.stop()
         dispatch(setIsPlaying({recordid: data?.recordid, isPlaying: false}))
@@ -178,7 +183,7 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
         wavesurfer.current.setPlaybackRate(speed)
     }, [speed])
 
-    // Копирование ссылки
+    // Копирование ссылки для скачивания
     const [baseURL, setBaseURL] = useState('')
     useEffect(() => {
         const url = window.location.href.split('/').slice(0, 3).join('/')
@@ -187,7 +192,6 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
 
     const copyLink = () => {
         const fileName = track?.split('/').reverse()[0]
-        console.log(fileName)
         copy(`${baseURL}/export?fileName=${fileName}`)
         setIsCopiedLink(true)
     }
@@ -216,13 +220,22 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
 
     // Перемотка записи
     const skip = (direction: 'forward' | 'back') => {
-        let offset = Math.ceil(data?.duration / 60) * 10
+        const offset = Math.ceil(data?.duration / 60) * 10
         wavesurfer.current.skip(direction === 'forward' ? offset : -offset)
     }
 
+    // Остановка записи при смене url
+    useEffect(() => () => stop(), [])
+
     return (
         <div className={styles.player}>
-            <div className={styles.player__audio} id="audio"/>
+            <div className={styles.player__audio} id="audio">
+                {loadingProgress === 0 && !isReady && <div>Запись не выбрана</div>}
+                {loadingProgress > 0 && loadingProgress < 100 && <div>
+                    <CircularProgressbar value={loadingProgress} text={`${loadingProgress} %`} />
+                </div>}
+            </div>
+
             <div className={styles.player__control}>
                 <div className={styles.left}>
                     <img src={!isPlaying ? "/play.svg" : "/pause.svg"} alt="playPause"
@@ -267,11 +280,11 @@ const Player: React.FC<PlayerProps> = ({pathFromProps, durationFromProps = 0}) =
                             <button className={isCopiedLink
                                 ? `${styles.player__control__copy} ${styles.player__control__copy_copied}`
                                 : styles.player__control__copy}
-                                    onClick={copyLink}>
+                                    onClick={isReady ? copyLink : null}>
                                 <img src={!isCopiedLink ? "/copy.svg" : "/copied-success.svg"} alt="copy"/>
                                 {!isCopiedLink ? "Копировать ссылку" : "Скопировано!"}
                             </button>
-                            <button onClick={() => download()} className={styles.player__control__download}>
+                            <button onClick={isReady ? download : null} className={styles.player__control__download}>
                                 <img src="/download.svg" alt="download"/>
                                 Скачать mp3
                             </button>

@@ -6,7 +6,6 @@ import Modal from "./Modal";
 import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
 import modalStyles from "../styles/modal.module.scss";
-import {useRouter} from "next/router";
 
 interface PropsType {
     title: string,
@@ -21,15 +20,9 @@ interface PropsType {
 }
 
 const TitlePage: React.FC<PropsType> = ({
-                                            title,
-                                            isListRecordsPage = false,
-                                            isSearch = false,
-                                            isInteraction = false,
-                                            selectedTrackId,
-                                            setPageSize,
-                                            pageSize,
-                                            setPopupSelectColumns,
-                                            setCurrentPage
+                                            title, isListRecordsPage = false, isSearch = false,
+                                            isInteraction = false, selectedTrackId, setPageSize,
+                                            pageSize, setPopupSelectColumns, setCurrentPage
                                         }) => {
 
     const [popupSaveFilter, setPopupSaveFilter] = useState(false)
@@ -38,12 +31,14 @@ const TitlePage: React.FC<PropsType> = ({
 
     const possibleListPageSize = [10, 25, 50, 100]
 
+    // Сохранение формы поиска (фильтра)
+    // todo: пока не работает (ждём бэк)
     const onSubmitSaveFilterForm = data => {
         alert(data)
         setPopupSaveFilter(false)
     }
 
-    // Проверка есть ли записи в localstorage, чтобы показать кнопку
+    // Проверка есть ли записи в localstorage, чтобы показать кнопку 'Вернуться к записям' из формы поиска
     const [backToListVisible, setBackToListVisible] = useState(false)
     useEffect(() => {
         const recordings = JSON.parse(localStorage.getItem('recordings'))

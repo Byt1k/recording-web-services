@@ -5,22 +5,23 @@ import Modal from "./Modal";
 import {useAppDispatch, useAppSelector} from "../redux/hooks";
 import {selectAuthUserData, setAuthUserData} from "../redux/slices/auth";
 import {destroyCookie} from 'nookies'
-import Router, {useRouter} from "next/router";
+import {useRouter} from "next/router";
 import {Api} from "../api";
 import modalStyles from '../styles/modal.module.scss'
+import {setIsPlaying, setRecordingDetail} from "../redux/slices/recordingDetail";
+import {selectSearchedRecordings, setRecordings} from "../redux/slices/recordings";
 
 type HeaderProps = {
     isFiltersPage?: boolean,
     isSearchAction?: boolean,
     isInteraction?: boolean,
-    setPopupResetFilter?: (value: boolean) => void
+    setPopupResetFilter?: (value: boolean) => void,
+    selectFilter?: () => void
 }
 
 const Header: React.FC<HeaderProps> = ({
-                                           isFiltersPage = false,
-                                           isSearchAction = false,
-                                           isInteraction = false,
-                                           setPopupResetFilter
+                                           isFiltersPage = false, isSearchAction = false,
+                                           isInteraction = false, setPopupResetFilter, selectFilter
                                        }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
@@ -32,6 +33,7 @@ const Header: React.FC<HeaderProps> = ({
     const exitModalRef = useRef(null)
     const exitModalBtnRef = useRef(null)
 
+    // Закрытие окна выхода по клику вне окна
     useEffect(() => {
         if (!exitIsActive) return
 
@@ -51,6 +53,7 @@ const Header: React.FC<HeaderProps> = ({
     const dispatch = useAppDispatch()
     const router = useRouter()
 
+    // Логаут
     const exit = async () => {
         try {
             await Api().auth.logout()
@@ -65,13 +68,17 @@ const Header: React.FC<HeaderProps> = ({
 
     const [recordingDeletedPopup, setRecordingDeletedPopup] = useState(false)
 
+    // Удаление записи
+    const {items} = useAppSelector(selectSearchedRecordings)
     const deleteRecording = async (recordingId) => {
         try {
-            const data = await Api().recordings.deleteRecording(recordingId)
-            if (data.status === 200) {
-                setPopupDelete(false)
-                setRecordingDeletedPopup(true)
-            }
+            await Api().recordings.deleteRecording(recordingId)
+            setPopupDelete(false)
+            setRecordingDeletedPopup(true)
+            dispatch(setIsPlaying({recordid: null, isPlaying: false}))
+            dispatch(setRecordingDetail(null))
+            // Обновление списка записей
+            dispatch(setRecordings({items : items.filter(r => r.recordid !== recordingId)}))
         } catch (e) {
             console.log(e)
         }
@@ -117,7 +124,8 @@ const Header: React.FC<HeaderProps> = ({
                                 Найти
                             </button>
                         </>}
-                        {isFiltersPage && <button className={styles.header__action__find}>Выбрать фильтр</button>}
+                        {isFiltersPage && <button className={styles.header__action__find}
+                                                  onClick={selectFilter}>Выбрать фильтр</button>}
                         {isInteraction && userData?.Capabilities[0].CanDelete === "true" &&
                             <button className={styles.header__action__reset}
                                     onClick={() => setPopupDelete(true)}>
@@ -130,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({
             <Modal active={popupExit} setActive={setPopupExit} title='Выйти?' text='Вы действительно хотите выйти?'>
                 <div className={modalStyles.modal__content__action}>
                     <button onClick={() => setPopupExit(false)}>Остаться</button>
-                    <button className={modalStyles.negative} onClick={() => exit()}>Выйти</button>
+                    <button className={modalStyles.negative} onClick={exit}>Выйти</button>
                 </div>
             </Modal>
             <Modal active={popupDelete} setActive={setPopupDelete} title='Удалить запись?'
@@ -148,7 +156,8 @@ const Header: React.FC<HeaderProps> = ({
                     <button className={modalStyles.positive} onClick={() => {
                         setRecordingDeletedPopup(false)
                         router.push('/list')
-                    }}>Ок</button>
+                    }}>Ок
+                    </button>
                 </div>
             </Modal>
         </>

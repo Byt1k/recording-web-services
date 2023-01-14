@@ -3,7 +3,7 @@ import styles from '../../styles/common.module.scss'
 import dynamic from 'next/dynamic'
 import Information from "../../components/Information";
 import {Api} from "../../api";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
 import {useAppDispatch, useAppSelector} from "../../redux/hooks";
 import {selectRecordingDetail, setRecordingDetail} from "../../redux/slices/recordingDetail";
@@ -16,15 +16,25 @@ const Player = dynamic(
 
 const RecordingDetailPage = () => {
 
+    const [recordingNotFound, setRecordingNotFound] = useState(false)
+
     const dispatch = useAppDispatch()
     const router = useRouter()
 
+    // Получение id записи из url
     const recordingId = router.query.id as string
 
+    // Отправка запроса
     useEffect(() => {
         const fetchData = async (recordingId) => {
-            const recordingDetail = await Api().recordings.getRecordingDetail(recordingId)
-            dispatch(setRecordingDetail(recordingDetail.items[0]))
+            try {
+                setRecordingNotFound(false)
+                const recordingDetail = await Api().recordings.getRecordingDetail(recordingId)
+                dispatch(setRecordingDetail(recordingDetail.items[0]))
+            } catch (e) {
+                console.log(e)
+                setRecordingNotFound(true)
+            }
         }
         recordingId ? fetchData(recordingId) : null
     }, [recordingId])
@@ -34,45 +44,22 @@ const RecordingDetailPage = () => {
     const userData = useAppSelector(selectAuthUserData)
 
     if (userData?.Capabilities[0].CanDetailView === 'false') {
-        return (
-            <>
-                <div>У Вас нет прав на просмотр страницы взаимодействия</div>
-                <style jsx>{`
-                  div {
-                    height: 100vh;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                  }
-                `}</style>
-            </>
-        )
+        return <div className={styles.messagePage}>У Вас нет прав на просмотр страницы взаимодействия</div>
+    }
+
+    if (recordingNotFound) {
+        return <div className={styles.messagePage}>Запись не найдена</div>
     }
 
     return (
         <>
             <Header isInteraction={true}/>
             <div className={styles.container}>
-                <Player pathFromProps={recordingDetail?.path} durationFromProps={recordingDetail?.duration}/>
+                <Player />
                 <Information recordingDetail={recordingDetail}/>
             </div>
         </>
     );
 };
-
-// export const getServerSideProps = async (ctx: GetServerSidePropsContext) => {
-//     try {
-//         const recordingId = ctx.query.id as string
-//         const recordingDetail = await Api(ctx).recordings.getRecordingDetail(recordingId)
-
-//         // todo: may be remove reducer recordingDetail
-//         // store.dispatch(setRecordingDetail(recordingDetail))
-
-//         return {props: {recordingDetail: recordingDetail.items[0]}}
-//     } catch (e) {
-//         console.log(e)
-//     }
-//     return {props: {recordingDetail: null}}
-// }
 
 export default RecordingDetailPage;

@@ -29,6 +29,7 @@ const Login = () => {
 
     const [token, setToken] = useState("")
 
+    // Проверка наличия токена
     useEffect(() => {
         if (token) {
             setIsFetching(true)
@@ -36,10 +37,12 @@ const Login = () => {
         }
     }, [token])
 
+    // Очистка формы после отправки
     useEffect(() => reset(), [formState.isSubmitSuccessful])
 
     const dispatch = useAppDispatch()
 
+    // Отправка запроса и сохранение токена на 30 дней
     const onSubmit = async ({login, password}) => {
         setIsFetching(true)
         try {

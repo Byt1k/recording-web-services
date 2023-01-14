@@ -2,11 +2,41 @@
 
 .filtersPage {
   h2 {
-    margin: 43px 0 22px 0;
+    margin: 20px 0 10px 0;
+  }
+}
+
+.tableContainer {
+  overflow-x: auto;
+  border-radius: 7px;
+
+  scrollbar-width: thin;
+
+  &::-webkit-scrollbar {
+    height: 7px;
+    width: 0px;
+    background-color: #F2F2F2;
+    border-radius: 9em;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: #4460F0;
+    border-radius: 9em;
   }
 }
 
 .filters {
+  width: 100%;
+
+  thead {
+    tr {
+      td {
+        white-space: nowrap;
+      }
+    }
+  }
+
+
   tr {
     td {
       &:first-child {

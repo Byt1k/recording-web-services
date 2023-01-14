@@ -5,7 +5,6 @@ import axios from "axios";
 import { recordingsApi } from "./recordings";
 import * as https from "https";
 
-
 export type ApiReturnType = {
     auth: ReturnType<typeof authApi>,
     recordings: ReturnType<typeof recordingsApi>
@@ -39,20 +38,14 @@ export const Api = (ctx?: NextPageContext | GetServerSidePropsContext): ApiRetur
 
     const instance = axios.create({
         baseURL: 'https://recording:8443/',
-        // baseURL: 'http://95.165.29.71:8080/',
         headers: {
             Authorization: 'Bearer ' + token
         },
         httpsAgent
     })
 
-
-
-
-
     return {
         auth: authApi(instance),
         recordings: recordingsApi(instance)
     }
-
 }

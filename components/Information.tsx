@@ -41,7 +41,7 @@ const Information: FC<{recordingDetail: RecordingItem}> = ({recordingDetail}) =>
                 <h2>Дополнительные данные</h2>
                 {recordingDetail?.metadata.map(item => (
                     <div key={item.name} className={styles.block__item}>
-                        <p>{`${businessAttributes[item.name] ? businessAttributes[item.name] : item.name}:`}</p>
+                        <p>{businessAttributes && `${businessAttributes[item.name] ? businessAttributes[item.name] : item.name}:`}</p>
                         <p>{item.value}</p>
                     </div>
                 ))}

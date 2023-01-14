@@ -9,6 +9,7 @@ import {useEffect, useState} from 'react';
 import {useRouter} from 'next/router';
 import {useAppDispatch} from "../redux/hooks";
 import Preloader from "../components/Preloader";
+import Head from "next/head";
 
 config.autoAddCss = false
 
@@ -19,6 +20,7 @@ const App = ({Component, pageProps}) => {
     const dispatch = useAppDispatch()
     const router = useRouter()
 
+    // Проверка авторизован ли пользователь
     useEffect(() => {
         const fetchData = async () => {
             setIsFetching(true)
@@ -39,28 +41,15 @@ const App = ({Component, pageProps}) => {
         return <Preloader/>
     }
 
-    return <Component {...pageProps} />
+    return (
+       <>
+           <Head>
+               <title>RWS</title>
+               <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+           </Head>
+           <Component {...pageProps} />
+       </>
+    )
 }
-
-// App.getInitialProps = wrapper.getInitialAppProps((store) =>
-//     async ({ctx, Component}) => {
-//         try {
-//             const authUserData = await Api(ctx).auth.getMe()
-//             store.dispatch(setAuthUserData(authUserData))
-//         } catch (e) {
-//             if (ctx.asPath !== '/login') {
-//                 ctx.res?.writeHead(302, {
-//                     Location: '/login'
-//                 })
-//                 ctx.res.end()
-//             }
-//             console.log(e)
-//         }
-//         return {
-//             pageProps: Component.getInitialProps ? await Component.getInitialProps({...ctx, store}) : {}
-//         }
-//     }
-// )
-
 export default wrapper.withRedux(App)
 

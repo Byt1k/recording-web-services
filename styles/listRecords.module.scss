@@ -10,7 +10,7 @@
 
   &::-webkit-scrollbar {
     height: 7px;
-    width: 0;
+    width: 7px;
     background-color: #F2F2F2;
     border-radius: 9em;
   }
@@ -26,12 +26,12 @@
     position: sticky;
     top: 0;
     background-color: #fff;
+    z-index: 0;
 
     tr {
       td {
         button {
           white-space: nowrap;
-          padding-right: 10px;
         }
       }
     }
@@ -39,19 +39,13 @@
 
   tbody {
     tr {
-      transition: all .3s ease;
-      cursor: pointer;
-
-      &:hover {
-        background-color: #D9E0FF;
-      }
 
       &.active {
         background-color: rgba(255, 138, 138, 0.35);
       }
 
       td {
-        white-space: nowrap;
+        //white-space: nowrap;
         &:first-child {
           display: flex;
           align-items: center;

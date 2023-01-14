@@ -1,6 +1,7 @@
 const dateToString = (date) => {
     const data = new Date(date)
-    return data.toLocaleString().split(', ').join(' ')
+    const response = data.toLocaleString().split(', ').join(' ')
+    return response !== 'Invalid Date' ? response : null
 }
 
 export default dateToString

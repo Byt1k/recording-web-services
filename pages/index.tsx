@@ -15,6 +15,7 @@ import modalStyles from "../styles/modal.module.scss";
 import dateToISO from "../utils/dateToISO";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faTrashCan} from "@fortawesome/free-regular-svg-icons";
+import Preloader from "../components/Preloader";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -24,11 +25,9 @@ const Player = dynamic(
 const Index = () => {
 
     const [error, setError] = useState(null)
-
-    // Очистка поиска
     const [popupResetFilter, setPopupResetFilter] = useState(false)
 
-    const defaultValues = {
+    const initValues = {
         starttime: '',
         stoptime: '',
         minDuration: '',
@@ -50,19 +49,32 @@ const Index = () => {
         'additionalParams.p_1.value': ''
     }
 
+    const {register, handleSubmit, formState: {isSubmitting}, reset, control, getValues} = useForm()
+
+    // Сохранение полей формы поиска
+    const formValues = getValues()
+
+    useEffect(() => {
+        const values = JSON.parse(localStorage.getItem('formValues'))
+        reset(values)
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem('formValues', JSON.stringify(formValues))
+    }, [formValues])
+
+    // Очистка формы
     const resetFilter = () => {
-        reset(defaultValues)
+        localStorage.removeItem('formValues')
         setAdditionalParams(initialAdditionalParams)
+        reset(initValues)
+        setSelectedAdditinalParams({})
         setPopupResetFilter(false)
     }
 
-    //обнуление пагинации в списке записей
-    useEffect(() => {
-        window.localStorage.setItem('currentPage', '1')
-    })
-
     const userData = useAppSelector(selectAuthUserData)
 
+    // Стилизация селектов
     const selectStyles = {
         control: () => ({
             border: '2px solid #EEEDF0',
@@ -86,12 +98,11 @@ const Index = () => {
         IndicatorSeparator: () => null
     }
 
-
     // Дополнительные поля для поиска
     const [additionalParamId, setAdditionalParamId] = useState(1)
 
     const initialAdditionalParams = [{
-        id: additionalParamId,
+        id: 1,
         name: "",
         value: ""
     }]
@@ -117,17 +128,18 @@ const Index = () => {
     }
     //
 
-
     const [inputDateFromColor, setInputDateFromColor] = useState("#C8C8C8")
     const [inputDateToColor, setInputDateToColor] = useState("#C8C8C8")
-
-    const {register, handleSubmit, formState, reset, control} = useForm()
 
     const dispatch = useAppDispatch()
     const router = useRouter()
 
+    // Формирование и отправка поискового запроса
     const onSubmit = async (dto) => {
         try {
+            // Обнуление пагинации
+            localStorage.setItem('currentPage', '1')
+
             // Формирование метадаты
             const {metadataQuery} = dto
             let metaData = Object.keys(metadataQuery).map(key => {
@@ -183,6 +195,7 @@ const Index = () => {
         }
     }
 
+    // Функция задания опции селекта по умолчанию
     const setDefaultOption = (value: string) => ([{value: "", label: value}])
 
     let mediaTypeOptions = setDefaultOption('Все медиаканалы')
@@ -191,10 +204,12 @@ const Index = () => {
     let serviceTypesOptions = setDefaultOption('Все типы')
     let typesOptions = setDefaultOption('Все направления')
 
+    // Функция привидения опций к нужному виду
     const parseMetadataValues = (values: { name: string, displayName: string }[]) => (
         values.map(v => ({value: v.name, label: v.displayName}))
     )
 
+    // Формирование опций селектов
     userData?.Enums.map(item => {
         if (item.name === 'mediatype') {
             const mediaTypeValues = parseMetadataValues(item.values)
@@ -218,12 +233,36 @@ const Index = () => {
         }
     })
 
+    // Селекты доп параметров поиска
     const additionalParamsOptions = setDefaultOption('Не выбрано')
     userData?.AdditionalSearchMetadata.map(i => {
         additionalParamsOptions.push({value: i, label: i})
     })
 
+    const [selectedAdditinalParams, setSelectedAdditinalParams] = useState({})
+    const [visibleAddParamsOptions, setVisibleAddParamsOptions] = useState([])
+
+    // Фильтрация выбора доп параметра только единажды
+    useEffect(() => {
+        const selectedAddValues = Object.keys(selectedAdditinalParams).map(key => selectedAdditinalParams[key])
+
+        let visibleAddParamsOptions = additionalParamsOptions.map(item => {
+            if (item.value === '') {
+                return item
+            }
+            if (selectedAddValues.indexOf(item.value) === -1) {
+                return item
+            }
+        })
+        setVisibleAddParamsOptions(visibleAddParamsOptions.filter(param => param !== undefined))
+
+    }, [selectedAdditinalParams])
+
     const canStandartForm = userData?.Capabilities[0].CanStandartForm === 'true'
+
+    if (isSubmitting) {
+        return  <Preloader/>
+    }
 
     return (
         <>
@@ -378,14 +417,20 @@ const Index = () => {
                                                         render={({field: {onChange, value}}) => (
                                                             <Select
                                                                 className={styles.additionalParam__name}
-                                                                options={additionalParamsOptions}
+                                                                options={visibleAddParamsOptions}
                                                                 instanceId={`param` + index}
                                                                 placeholder='Введите параметр'
                                                                 styles={selectStyles}
                                                                 components={selectComponents}
                                                                 theme={selectTheme}
-                                                                value={additionalParamsOptions.find(c => c.value === value)}
-                                                                onChange={val => onChange(val.value)}
+                                                                value={visibleAddParamsOptions.find(c => c.value === value)}
+                                                                onChange={val => {
+                                                                    onChange(val.value)
+                                                                    setSelectedAdditinalParams({
+                                                                        ...selectedAdditinalParams,
+                                                                        [`p_${index + 1}`]: val.value
+                                                                    })
+                                                                }}
                                                             />
                                                         )}
                                             />
@@ -403,7 +448,7 @@ const Index = () => {
                                                                 styles={selectStyles}
                                                                 components={selectComponents}
                                                                 theme={selectTheme}
-                                                                value={additionalParamsOptions.find(c => c.value === value)}
+                                                                // value={additionalParamsOptions.find(c => c.value === value)}
                                                                 onChange={val => onChange(val.value)}
                                                             />
                                                         )}

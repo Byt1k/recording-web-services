@@ -17,6 +17,9 @@ import modalActionStyles from '../styles/modal.module.scss'
 
 const ListRecords = () => {
 
+    const userData = useAppSelector(selectAuthUserData)
+
+    // Получение записей и сохранение в LS
     const [recordings, setRecordings] = useState([])
     let {items} = useAppSelector(selectSearchedRecordings)
 
@@ -28,15 +31,13 @@ const ListRecords = () => {
         }
     }, [items])
 
-    const userData = useAppSelector(selectAuthUserData)
-
     useEffect(() => {
         if (recordings?.length) {
             localStorage.setItem('recordings', JSON.stringify(recordings));
         }
     }, [recordings?.length])
 
-
+    // Добавление к записям зависмостей, нумерации и преобразование даты
     const newRecordings = recordings?.map((recording, recordingIndex) => ({
         ...recording,
         number: recordingIndex + 1,
@@ -73,9 +74,8 @@ const ListRecords = () => {
         localStorage.setItem('currentPage', currentPage.toString())
     }, [currentPage])
 
-
+    // Раскрытие зависимых записей
     const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
-
     const changeVisibleDependencies = item => {
         visibleDependenciesId.map(id => (id == item.recordid
                 ? setVisibleDependenciesId(visibleDependenciesId.filter(id => id != item.recordid))
@@ -84,7 +84,6 @@ const ListRecords = () => {
     };
 
     // Выбор акивного трэка
-
     const loadedTrack = useAppSelector(selectRecordingIsPlaying)
     const [selectedTrackId, setSelectedTrackId] = useState(loadedTrack.recordid)
 
@@ -98,59 +97,93 @@ const ListRecords = () => {
 
     useEffect(() => {
         const getActiveTrack = async (recordingId) => {
-            const data = await Api().recordings.getRecordingDetail(recordingId)
-            dispatch(setRecordingDetail(data.items[0]))
+            try {
+                const data = await Api().recordings.getRecordingDetail(recordingId)
+                dispatch(setRecordingDetail(data.items[0]))
+            } catch (e) {
+                console.log(e)
+            }
         }
         if (selectedTrackId) {
             getActiveTrack(selectedTrackId)
         }
     }, [selectedTrackId])
 
-
-    // Выбор столбцов
-    const {register, handleSubmit, formState, reset, control} = useForm()
-
+    // Сортировака выбора столбцов по алфавиту
     const businessAttributes = userData?.BusinessAttributes[0]
 
-    // Сортировака выбора столбцов по алфавиту
     const sortableBusinessAttributes = [];
     for (const key in businessAttributes) {
         sortableBusinessAttributes.push([businessAttributes[key], key]);
     }
     sortableBusinessAttributes.sort();
 
+    // Выбор столбцов
+    const {register, handleSubmit, formState, reset, control} = useForm()
+
     const [popupSelectColumns, setPopupSelectColumns] = useState(false)
 
     const [selectedColumns, setSelectedColumns] = useState(["username", "starttime", "stoptime", "duration", "callId", "mediatype", "type"])
-    const saveSelectColumn = ({columns}) => {
+
+    useEffect(() => {
+        const columnsFromLS = JSON.parse(localStorage.getItem('selectedColumns'))
+
+        if (columnsFromLS) {
+            setSelectedColumns(columnsFromLS)
+        }
+    }, [])
+
+    useEffect(() => reset(), [selectedColumns])
+
+    const saveSelectColumn = (columns) => {
         const preSelectedColumns = []
         for (const key in columns) {
             if (columns[key]) {
                 preSelectedColumns.push(key)
             }
         }
+        localStorage.setItem('selectedColumns', JSON.stringify(preSelectedColumns))
         setSelectedColumns(preSelectedColumns)
         setPopupSelectColumns(false)
     }
 
     const businessAttributesKeys = Object.keys(businessAttributes || {})
 
-    // Сортировка столбцов
-    type SortConfig = { key: string | null, direction: 'ascending' | 'descending' }
-    const [sortConfig, setSortConfig] = useState<SortConfig>({key: null, direction: 'ascending'})
+    // Сортировка столбцов в таблице
+    type SortConfig = { key: string, direction: 'ascending' | 'descending' }
+    const [sortConfig, setSortConfig] = useState<SortConfig>({key: 'number', direction: 'ascending'})
     let sortedVisibleRecordings = [];
 
-    if (visibleRecordings?.length) {
-        sortedVisibleRecordings = [...visibleRecordings]
-    }
+    // парсинг метадаты в основных записях для возможности сортировки
+    sortedVisibleRecordings = visibleRecordings?.map(r => {
+        r.metadata?.map(item => (
+            r[item.name] = item.value
+        ))
+        delete r.metadata
 
-    sortedVisibleRecordings.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-            return sortConfig.direction === 'ascending' ? -1 : 1;
+        return r
+    })
+
+    sortedVisibleRecordings?.sort((a, b) => {
+        if (isNaN(+a[sortConfig.key])) {
+            if (!a[sortConfig.key]) a[sortConfig.key] = '-'
+            if (!b[sortConfig.key]) b[sortConfig.key] = '-'
+
+            if (a[sortConfig.key] < b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? -1 : 1;
+            }
+            if (a[sortConfig.key] > b[sortConfig.key]) {
+                return sortConfig.direction === 'ascending' ? 1 : -1;
+            }
+        } else {
+            if (a[sortConfig.key] - b[sortConfig.key] < 0) {
+                return sortConfig.direction === 'ascending' ? -1 : 1;
+            }
+            if (a[sortConfig.key] - b[sortConfig.key] > 0) {
+                return sortConfig.direction === 'ascending' ? 1 : -1;
+            }
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-            return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
+
         return 0;
     });
 
@@ -162,6 +195,7 @@ const ListRecords = () => {
         setSortConfig({key, direction});
     }
 
+    // Смена иконки playPause в строке записи
     const {isPlaying, recordid: playingRecordId} = useAppSelector(selectRecordingIsPlaying)
     const showPlayPauseImg = (recordId) => {
         if (isPlaying && playingRecordId === recordId) {
@@ -171,6 +205,7 @@ const ListRecords = () => {
         }
     }
 
+    // Отображение стрелки сортировки в заголовке таблице
     const sortedArrowClassName = (sortConfig, key) => {
         if (sortConfig.key === key) {
             if (sortConfig.direction === 'descending') {
@@ -187,20 +222,25 @@ const ListRecords = () => {
                        setPageSize={setPageSize} pageSize={pageSize} setCurrentPage={setCurrentPage}
                        setPopupSelectColumns={setPopupSelectColumns}
             />
-            <div className={styles.listContainer}>
+            <div className={styles.listContainer} id="listContainer">
                 <table className={styles.list}>
                     <thead>
                     <tr>
                         <td width={20}/>
-                        <td width={40}>№</td>
+                        <td width={40}>
+                            <button onClick={() => requestSort('number')}
+                                    className={sortedArrowClassName(sortConfig, 'number')}>
+                                <span style={{marginRight: '5px'}}>№</span>
+                            </button>
+                        </td>
                         {businessAttributesKeys.map(key => {
-                            if (selectedColumns.some(c => c === key)) {
+                            if (selectedColumns?.some(c => c === key)) {
                                 return (
                                     <td key={key}>
-                                        <button
-                                            onClick={() => requestSort(key)}
-                                            className={sortedArrowClassName(sortConfig, key)}
-                                        >{businessAttributes[key]}</button>
+                                        <button onClick={() => requestSort(key)}
+                                                className={sortedArrowClassName(sortConfig, key)}>
+                                            {businessAttributes[key]}
+                                        </button>
                                     </td>
                                 )
                             }
@@ -208,14 +248,7 @@ const ListRecords = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {sortedVisibleRecordings.map(r => {
-
-                        // парсинг метадаты
-                        const metaData: any = {}
-                        r.metadata?.map(item => (
-                            metaData[item.name] = item.value
-                        ))
-
+                    {sortedVisibleRecordings?.map(r => {
                         return <React.Fragment key={r.recordid}>
                             <tr className={trackIsActive(r, styles.list__record)}
                                 onClick={() => setSelectedTrackId(r.recordid)}
@@ -245,9 +278,9 @@ const ListRecords = () => {
                                 </td>
                                 <td width={40}>{r.number}</td>
                                 {businessAttributesKeys.map(key => {
-                                    if (selectedColumns.some(c => c === key)) {
+                                    if (selectedColumns?.some(c => c === key)) {
                                         return (
-                                            <td key={key}>{r[key]}</td>
+                                            <td key={key}>{r[key] || '-'}</td>
                                         )
                                     }
                                 })}
@@ -255,9 +288,8 @@ const ListRecords = () => {
                             {visibleDependenciesId.some(id => id == r.recordid) && r.dependencies.map(d => {
 
                                 // парсинг метадаты
-                                const metaData: any = {}
-                                r.metadata?.map(item => (
-                                    metaData[item.name] = item.value
+                                d.metadata?.map(item => (
+                                    d[item.name] = item.value
                                 ))
 
                                 return (
@@ -279,7 +311,7 @@ const ListRecords = () => {
                                         {businessAttributesKeys.map(key => {
                                             if (selectedColumns.some(c => c === key)) {
                                                 return (
-                                                    <td key={key}>{d[key]}</td>
+                                                    <td key={key}>{d[key] || '-'}</td>
                                                 )
                                             }
                                         })}
@@ -308,8 +340,8 @@ const ListRecords = () => {
                                 return (
                                     <label key={key}>
                                         <input type="checkbox"
-                                               {...register(`columns.${sortableBusinessAttributes[key][1]}`)}
-                                               defaultChecked={selectedColumns.some(c => c === sortableBusinessAttributes[key][1])}
+                                               {...register(sortableBusinessAttributes[key][1])}
+                                               defaultChecked={selectedColumns?.some(c => c === sortableBusinessAttributes[key][1])}
                                         />
                                         {sortableBusinessAttributes[key][0]}
                                     </label>
@@ -318,8 +350,8 @@ const ListRecords = () => {
                         </div>
                     </div>
                     <div className={modalActionStyles.modal__content__action}>
-                        <button onClick={() => setPopupSelectColumns(false)}>Отменить</button>
-                        <button className={modalActionStyles.positive} type='submit'>Выбрать</button>
+                        <button onClick={() => setPopupSelectColumns(false)} type="reset">Отменить</button>
+                        <button className={modalActionStyles.positive} type="submit">Выбрать</button>
                     </div>
                 </form>
             </Modal>

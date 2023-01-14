@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+//@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 
 $text-color: #000;
 $placeholder-color: #C8C8C8;
@@ -33,7 +33,7 @@ h3 {
 
 table {
   background-color: #fff;
-  box-shadow: 0px 3px 14px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.03);
   border-radius: 7px;
   width: 100%;
   border-spacing: 0;
@@ -88,6 +88,17 @@ table {
             margin-top: 3px;
           }
         }
+      }
+    }
+  }
+
+  tbody {
+    tr {
+      transition: all .3s ease;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #D9E0FF;
       }
     }
   }
