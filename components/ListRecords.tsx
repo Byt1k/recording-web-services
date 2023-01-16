@@ -19,9 +19,20 @@ const ListRecords = () => {
 
     const userData = useAppSelector(selectAuthUserData)
 
+    // Параметры сортировки
+    type SortConfig = { key: string, direction: 'ascending' | 'descending' }
+    const [sortConfig, setSortConfig] = useState<SortConfig>({key: 'number', direction: 'ascending'})
+
+    useEffect(() => {
+        const sortCongig = JSON.parse(localStorage.getItem('sortConfig'))
+        if (!!sortCongig) {
+            setSortConfig(sortCongig)
+        }
+    }, [])
+
     // Получение записей и сохранение в LS
     const [recordings, setRecordings] = useState([])
-    let {items} = useAppSelector(selectSearchedRecordings)
+    const {items} = useAppSelector(selectSearchedRecordings)
 
     useEffect(() => {
         if (!items.length) {
@@ -37,22 +48,33 @@ const ListRecords = () => {
         }
     }, [recordings?.length])
 
-    // Добавление к записям зависмостей, нумерации и преобразование даты
-    const newRecordings = recordings?.map((recording, recordingIndex) => ({
-        ...recording,
-        number: recordingIndex + 1,
-        starttime: dateToString(recording.starttime),
-        stoptime: dateToString(recording.stoptime),
-        duration: timeTransformer(recording.duration),
-        dependencies: recording.dependencies?.map((d, dIndex) => (
-            {
-                ...d,
-                number: `${recordingIndex + 1}.${dIndex + 1}`,
-                starttime: dateToString(d.starttime),
-                stoptime: dateToString(d.stoptime),
-                duration: timeTransformer(d.duration),
-            }))
-    }))
+    // Добавление к записям нумерации и преобразование даты
+    let newRecordings = recordings?.map((recording, recordingIndex) => {
+        return {
+            ...recording,
+            number: recordingIndex + 1,
+            starttime: dateToString(recording.starttime),
+            stoptime: dateToString(recording.stoptime),
+            duration: timeTransformer(recording.duration),
+            dependencies: recording.dependencies?.map((d, dIndex) => (
+                {
+                    ...d,
+                    number: `${recordingIndex + 1}.${dIndex + 1}`,
+                    starttime: dateToString(d.starttime),
+                    stoptime: dateToString(d.stoptime),
+                    duration: timeTransformer(d.duration),
+                }))
+        }
+    })
+
+    // Парсинг метадаты для возможности сортировки
+    newRecordings = newRecordings?.map(r => {
+        r.metadata?.map(item => (
+            r[item.name] = item.value
+        ))
+        delete r.metadata
+        return r
+    })
 
     // Пэйджинг
     const [currentPage, setCurrentPage] = useState(1)
@@ -61,7 +83,12 @@ const ListRecords = () => {
 
     const lastIndex = currentPage * pageSize
     const firstIndex = lastIndex - pageSize
-    const visibleRecordings = newRecordings?.slice(firstIndex, lastIndex)
+
+    const [visibleRecordings, setVisibleRecordings] = useState(newRecordings?.slice(firstIndex, lastIndex))
+
+    useEffect(() => {
+        setVisibleRecordings(newRecordings?.slice(firstIndex, lastIndex))
+    }, [pageSize, currentPage, sortConfig, recordings])
 
     useEffect(() => {
         setCurrentPage(+localStorage.getItem('currentPage'))
@@ -75,13 +102,27 @@ const ListRecords = () => {
     }, [currentPage])
 
     // Раскрытие зависимых записей
-    const [visibleDependenciesId, setVisibleDependenciesId] = useState([""])
-    const changeVisibleDependencies = item => {
-        visibleDependenciesId.map(id => (id == item.recordid
-                ? setVisibleDependenciesId(visibleDependenciesId.filter(id => id != item.recordid))
-                : setVisibleDependenciesId([...visibleDependenciesId, item.recordid])
-        ))
-    };
+    const [visibleDependenciesId, setVisibleDependenciesId] = useState([])
+    const changeVisibleDependencies = async (recording) => {
+        for (let i = 0; i <= visibleDependenciesId.length; i++) {
+            if (visibleDependenciesId[i] === recording.recordid) {
+                setVisibleDependenciesId(visibleDependenciesId.filter(id => id != recording.recordid))
+                return
+            } else {
+                setVisibleDependenciesId([...visibleDependenciesId, recording.recordid])
+
+                if (!recording.dependencies) {
+                    const data = await Api().recordings.getRecordingConversation(recording.callId)
+                    setRecordings(recordings.map(r => {
+                        if (r.recordid === recording.recordid) {
+                            return {...r, dependencies: data.filter(item => item.recordid !== recording.recordid)}
+                        }
+                        return r
+                    }))
+                }
+            }
+        }
+    }
 
     // Выбор акивного трэка
     const loadedTrack = useAppSelector(selectRecordingIsPlaying)
@@ -150,21 +191,7 @@ const ListRecords = () => {
     const businessAttributesKeys = Object.keys(businessAttributes || {})
 
     // Сортировка столбцов в таблице
-    type SortConfig = { key: string, direction: 'ascending' | 'descending' }
-    const [sortConfig, setSortConfig] = useState<SortConfig>({key: 'number', direction: 'ascending'})
-    let sortedVisibleRecordings = [];
-
-    // парсинг метадаты в основных записях для возможности сортировки
-    sortedVisibleRecordings = visibleRecordings?.map(r => {
-        r.metadata?.map(item => (
-            r[item.name] = item.value
-        ))
-        delete r.metadata
-
-        return r
-    })
-
-    sortedVisibleRecordings?.sort((a, b) => {
+    newRecordings?.sort((a, b) => {
         if (isNaN(+a[sortConfig.key])) {
             if (!a[sortConfig.key]) a[sortConfig.key] = '-'
             if (!b[sortConfig.key]) b[sortConfig.key] = '-'
@@ -193,6 +220,7 @@ const ListRecords = () => {
             direction = 'descending';
         }
         setSortConfig({key, direction});
+        localStorage.setItem('sortConfig', JSON.stringify({key, direction}))
     }
 
     // Смена иконки playPause в строке записи
@@ -248,13 +276,13 @@ const ListRecords = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {sortedVisibleRecordings?.map(r => {
+                    {visibleRecordings?.map(r => {
                         return <React.Fragment key={r.recordid}>
                             <tr className={trackIsActive(r, styles.list__record)}
                                 onClick={() => setSelectedTrackId(r.recordid)}
                             >
                                 <td>
-                                    {r.record_count ? <img
+                                    {r.record_count > 1 ? <img
                                             src="/records-arrow.svg"
                                             alt=""
                                             onClick={async (e) => {
@@ -285,7 +313,7 @@ const ListRecords = () => {
                                     }
                                 })}
                             </tr>
-                            {visibleDependenciesId.some(id => id == r.recordid) && r.dependencies.map(d => {
+                            {visibleDependenciesId.some(id => id == r.recordid) && r.dependencies?.map(d => {
 
                                 // парсинг метадаты
                                 d.metadata?.map(item => (

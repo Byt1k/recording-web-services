@@ -1,5 +1,5 @@
 import styles from '../styles/modal.module.scss'
-import {useCallback, useEffect} from "react";
+import {useCallback, useEffect} from "react"
 
 interface PropsType {
     active: boolean,
@@ -16,15 +16,14 @@ const Modal: React.FC<PropsType> = ({active, setActive, title, text, isNegative,
         if (e.key === 'Escape') {
             setActive(false)
         }
-    }, []);
+    }, [])
 
     useEffect(() => {
-        document.addEventListener("keydown", escFunc, false);
-
+        document.addEventListener("keydown", escFunc, false)
         return () => {
-            document.removeEventListener("keydown", escFunc, false);
-        };
-    }, []);
+            document.removeEventListener("keydown", escFunc, false)
+        }
+    }, [])
 
     return (
         <div className={active ? `${styles.modal} ${styles.modal_active}` : styles.modal}
@@ -37,7 +36,7 @@ const Modal: React.FC<PropsType> = ({active, setActive, title, text, isNegative,
                 {children}
             </div>
         </div>
-    );
-};
+    )
+}
 
 export default Modal;

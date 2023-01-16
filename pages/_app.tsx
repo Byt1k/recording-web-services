@@ -28,6 +28,10 @@ const App = ({Component, pageProps}) => {
                 const authUserData = await Api().auth.getMe()
                 dispatch(setAuthUserData(authUserData))
 
+                if (router.asPath === '/login') {
+                    await router.push('/')
+                }
+
             } catch (e) {
                 await router.push('/login')
                 console.log(e)

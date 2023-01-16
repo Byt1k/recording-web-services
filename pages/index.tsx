@@ -16,6 +16,7 @@ import dateToISO from "../utils/dateToISO";
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faTrashCan} from "@fortawesome/free-regular-svg-icons";
 import Preloader from "../components/Preloader";
+import {setIsPlaying, setRecordingDetail} from "../redux/slices/recordingDetail";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -23,6 +24,8 @@ const Player = dynamic(
 )
 
 const Index = () => {
+
+    const [isFetching, setIsFetching] = useState(false)
 
     const [error, setError] = useState(null)
     const [popupResetFilter, setPopupResetFilter] = useState(false)
@@ -49,7 +52,7 @@ const Index = () => {
         'additionalParams.p_1.value': ''
     }
 
-    const {register, handleSubmit, formState: {isSubmitting}, reset, control, getValues} = useForm()
+    const {register, handleSubmit, reset, control, getValues} = useForm()
 
     // Сохранение полей формы поиска
     const formValues = getValues()
@@ -136,6 +139,7 @@ const Index = () => {
 
     // Формирование и отправка поискового запроса
     const onSubmit = async (dto) => {
+        setIsFetching(true)
         try {
             // Обнуление пагинации
             localStorage.setItem('currentPage', '1')
@@ -187,10 +191,17 @@ const Index = () => {
             // Отправка запроса
             const data = await Api().recordings.search(dataQuery)
             dispatch(setRecordings(data))
+
+            // Обнуление выбранной записи
+            dispatch(setRecordingDetail(null))
+            dispatch(setIsPlaying({recordid: null, isPlaying: false}))
             setError(null)
-            router.push('/list')
+
+            await router.push('/list')
+            setIsFetching(false)
         } catch (e) {
             console.log(e)
+            setIsFetching(false)
             setError('Записи не найдены')
         }
     }
@@ -260,7 +271,7 @@ const Index = () => {
 
     const canStandartForm = userData?.Capabilities[0].CanStandartForm === 'true'
 
-    if (isSubmitting) {
+    if (isFetching) {
         return  <Preloader/>
     }
 
@@ -270,7 +281,7 @@ const Index = () => {
             <div className={styles.container}>
                 <Player/>
                 <>
-                    <TitlePage title="Поиск записей" isSearch={true}/>
+                    <TitlePage title="Поиск записей" isSearch={true} getFormValues={getValues}/>
                     <form onSubmit={handleSubmit(onSubmit)} className={styles.main} id="main-form">
                         <div className={`${styles.main__item} ${styles.main__item_50p}`}>
                             <h3>Временной диапазон</h3>

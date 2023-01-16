@@ -61,6 +61,7 @@ const Header: React.FC<HeaderProps> = ({
             dispatch(setAuthUserData(null))
             localStorage.clear()
             await router.push('/login')
+            setPopupExit(false)
         } catch (e) {
             console.log('Logout error: ', e)
         }

@@ -26,21 +26,10 @@ const Login = () => {
     });
 
     const router = useRouter()
-
-    const [token, setToken] = useState("")
-
-    // Проверка наличия токена
-    useEffect(() => {
-        if (token) {
-            setIsFetching(true)
-            router.push("/")
-        }
-    }, [token])
+    const dispatch = useAppDispatch()
 
     // Очистка формы после отправки
     useEffect(() => reset(), [formState.isSubmitSuccessful])
-
-    const dispatch = useAppDispatch()
 
     // Отправка запроса и сохранение токена на 30 дней
     const onSubmit = async ({login, password}) => {
@@ -50,13 +39,13 @@ const Login = () => {
             setCookie(null, 'rwsAuthToken', token, {
                 maxAge: 30 * 24 * 60 * 60,
                 path: '/'
-            } )
+            })
             const authUserData = await Api().auth.getMe()
 
             if (authUserData.Capabilities[0].CanRead === 'true') {
                 dispatch(setAuthUserData(authUserData))
                 setErrorMessage('');
-                setToken(token)
+                await router.push("/")
                 setIsFetching(false)
             } else if (authUserData.Capabilities[0].CanRead === 'false') {
                 setErrorMessage('К системе записи нет доступа. Обратититесь к администратору')
@@ -64,9 +53,12 @@ const Login = () => {
             }
 
         } catch (e) {
-            console.warn('Register err: ', e)
+            console.warn('Login err: ', e)
             if (e.response?.data.message) {
                 setErrorMessage(e.response.data.message)
+            }
+            if (e.message) {
+                setErrorMessage(e.message)
             }
         }
         setIsFetching(false)
@@ -78,7 +70,7 @@ const Login = () => {
 
     return (
         <>
-            <Header />
+            <Header/>
             <div className={styles.login}>
                 <form onSubmit={handleSubmit(onSubmit)} className={styles.login__form}>
                     <h1>Добро пожаловать!</h1>
@@ -97,17 +89,13 @@ const Login = () => {
                                 type={!passwordIsVisible ? "password" : "text"}
                                 placeholder="Введите пароль"/>
                             <FontAwesomeIcon
-                                icon={passwordIsVisible ? faEye : faEyeSlash}
+                                icon={passwordIsVisible ? faEyeSlash : faEye}
                                 onMouseDown={() => setPasswordIsVisible(true)}
                                 onMouseUp={() => setPasswordIsVisible(false)}
                                 color="#B9BBBE" cursor="pointer" className={styles.login__form__field__password__icon}/>
                         </div>
                         <div className={styles.login__form__field__reestablishPassword}>Восстановить пароль</div>
                     </div>
-                    {/*`<label className={styles.login__form__rememberMe}>*/}
-                    {/*    <input type="checkbox" {...register("rememberMe")}/>*/}
-                    {/*    Запомнить пароль*/}
-                    {/*</label>`*/}
                     {errorMessage && <p className={styles.error}>{errorMessage}</p>}
                     <button type="submit" disabled={!formState.isValid || formState.isSubmitting}>Войти</button>
                 </form>

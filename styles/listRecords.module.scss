@@ -1,12 +1,9 @@
 @import "common.module";
 
 .listContainer {
-  overflow-x: auto;
   max-width: 100%;
   height: calc(100vh - 146px - 120px);
   overflow: auto;
-
-  scrollbar-width: thin;
 
   &::-webkit-scrollbar {
     height: 7px;

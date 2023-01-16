@@ -8,7 +8,8 @@ import {useRouter} from "next/router";
 
 const Filters = () => {
 
-    const fileds = {
+    const fields = {
+        filterName: "Название фильтра",
         starttime: "Дата начала",
         stoptime: "Дата окончания",
         minDuration: "Мин. длительность",
@@ -27,10 +28,10 @@ const Filters = () => {
         CustomerType: "Тип клиента"
     }
 
-
     const response = [
         {
             id: 1,
+            filterName: "Фильр №1",
             starttime: "2022-12-14T14:07",
             stoptime: "2022-12-17T14:07",
             minDuration: '5',
@@ -51,8 +52,15 @@ const Filters = () => {
         },
         {
             id: 2,
+            filterName: "Фильр №2",
             starttime: "2022-12-01T03:00",
             username: 'Agent007',
+        },
+        {
+            id: 3,
+            filterName: "Для поиска зависимых записей",
+            starttime: "2022-12-28T12:10",
+            stoptime: '2022-12-28T12:17',
         }
     ]
 
@@ -74,7 +82,7 @@ const Filters = () => {
         if (selectedFilterId) {
             let filter = response.filter(f => f.id === selectedFilterId)[0]
             Object.keys(filter).map(key => {
-                if (metadataKeys.some(item => item === key)) {
+                if (metadataKeys?.some(item => item === key)) {
                     filter = {
                         ...filter,
                         ['metadataQuery.' + key]: filter[key]
@@ -97,10 +105,10 @@ const Filters = () => {
                     <table className={styles.filters}>
                         <thead>
                         <tr>
-                            <td></td>
-                            {Object.keys(fileds || {}).map(key => (
+                            <td/>
+                            {Object.keys(fields || {}).map(key => (
                                 <td key={key}>
-                                    <button>{fileds[key]}</button>
+                                    <button>{fields[key]}</button>
                                 </td>
                             ))}
                         </tr>
@@ -115,7 +123,7 @@ const Filters = () => {
                                                onChange={() => setSelectedFilterId(f.id)}
                                         />
                                     </td>
-                                    {Object.keys(fileds || {}).map(key => (
+                                    {Object.keys(fields || {}).map(key => (
                                         <td key={key}>{f[key]}</td>
                                     ))}
                                 </tr>
