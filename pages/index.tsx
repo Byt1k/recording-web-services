@@ -17,6 +17,7 @@ import {FontAwesomeIcon} from '@fortawesome/react-fontawesome'
 import {faTrashCan} from "@fortawesome/free-regular-svg-icons";
 import Preloader from "../components/Preloader";
 import {setIsPlaying, setRecordingDetail} from "../redux/slices/recordingDetail";
+import selectTimeRange, {TimeRange} from "../utils/selectTimeRange";
 
 const Player = dynamic(
     () => import('../components/Player'),
@@ -30,7 +31,29 @@ const Index = () => {
     const [error, setError] = useState(null)
     const [popupResetFilter, setPopupResetFilter] = useState(false)
 
+    const possibleDateOptions: Array<{ value: TimeRange, label: string }> = [
+        {value: "custom", label: "Пользовательская дата"},
+        {value: "currentDay", label: "Текущий день"},
+        {value: "prevDay", label: "Предыдущий день"},
+        {value: "currentWeek", label: "Текущая неделя"},
+        {value: "prevWeek", label: "Предыдущая неделя"},
+        {value: "currentMonth", label: "Текущий месяц"},
+        {value: "prevMonth", label: "Предыдущий месяц"},
+        {value: "currentQuarter", label: "Текущий квартал"},
+        {value: "prevQuarter", label: "Предыдущий квартал"},
+        {value: "currentYear", label: "Текущий год"},
+        {value: "prevYear", label: "Предыдущий год"},
+    ]
+
+    const [timeRange, setTimeRange] = useState<ReturnType<typeof selectTimeRange>>({start: "", end: ""})
+
+    useEffect(() => {
+        setValue('starttime', timeRange.start)
+        setValue('stoptime', timeRange.end)
+    }, [timeRange])
+
     const initValues = {
+        timeRange: 'custom',
         starttime: '',
         stoptime: '',
         minDuration: '',
@@ -52,7 +75,7 @@ const Index = () => {
         'additionalParams.p_1.value': ''
     }
 
-    const {register, handleSubmit, reset, control, getValues} = useForm()
+    const {register, handleSubmit, reset, control, getValues, setValue} = useForm()
 
     // Сохранение полей формы поиска
     const formValues = getValues()
@@ -60,6 +83,12 @@ const Index = () => {
     useEffect(() => {
         const values = JSON.parse(localStorage.getItem('formValues'))
         reset(values)
+        values?.additionalParams && setAdditionalParams(Object.keys(values.additionalParams || {}).map((param) => {
+            return {
+                id: param.split('_').reverse()[0],
+                ...values.additionalParams[param]
+            }
+        }))
     }, [])
 
     useEffect(() => {
@@ -71,7 +100,7 @@ const Index = () => {
         localStorage.removeItem('formValues')
         setAdditionalParams(initialAdditionalParams)
         reset(initValues)
-        setSelectedAdditinalParams({})
+        setSelectedAdditionalParams({})
         setPopupResetFilter(false)
     }
 
@@ -101,35 +130,16 @@ const Index = () => {
         IndicatorSeparator: () => null
     }
 
-    // Дополнительные поля для поиска
-    const [additionalParamId, setAdditionalParamId] = useState(1)
-
-    const initialAdditionalParams = [{
-        id: 1,
-        name: "",
-        value: ""
-    }]
-
-    const [additionalParams, setAdditionalParams] = useState(initialAdditionalParams)
-
-    const addAdditionalParam = () => {
-        setAdditionalParamId(additionalParamId + 1)
-        setAdditionalParams([
-            ...additionalParams,
-            {
-                id: additionalParamId + 1,
-                name: "",
-                value: ""
-            }
-        ])
+    const selectDateOptions = {
+        control: () => ({
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            height: 20,
+            width: 210
+        })
     }
 
-    const deleteAdditionalParam = (id) => {
-        setAdditionalParams(() => (
-            additionalParams.filter(param => param.id !== id)
-        ))
-    }
-    //
 
     const [inputDateFromColor, setInputDateFromColor] = useState("#C8C8C8")
     const [inputDateToColor, setInputDateToColor] = useState("#C8C8C8")
@@ -244,18 +254,73 @@ const Index = () => {
         }
     })
 
+    // Дополнительные поля для поиска
+    const initialAdditionalParams = [{
+        id: 1,
+        name: "",
+        value: "",
+        not: "false"
+    }]
+
+    const [additionalParams, setAdditionalParams] = useState(initialAdditionalParams)
+
+    const addAdditionalParam = () => {
+        setAdditionalParams([
+            ...additionalParams,
+            {
+                id: new Date().getTime(),
+                name: "",
+                value: "",
+                not: "false"
+            }
+        ])
+    }
+
+    const deleteAdditionalParam = (id) => {
+        const {additionalParams: params, ...formValues} = getValues()
+        delete params[`p_${id}`]
+
+        reset({
+            ...formValues,
+            additionalParams: params
+        })
+
+        delete selectedAdditionalParams[`p_${id}`]
+
+        setAdditionalParams(() => (
+            additionalParams.filter(param => param.id !== id)
+        ))
+    }
+    //
+
     // Селекты доп параметров поиска
     const additionalParamsOptions = setDefaultOption('Не выбрано')
     userData?.AdditionalSearchMetadata.map(i => {
-        additionalParamsOptions.push({value: i, label: i})
+        additionalParamsOptions.push({value: i, label: userData?.BusinessAttributes[0][i]})
     })
 
-    const [selectedAdditinalParams, setSelectedAdditinalParams] = useState({})
-    const [visibleAddParamsOptions, setVisibleAddParamsOptions] = useState([])
+    const notOptions = [
+        {value: 'false', label: 'Равно'},
+        {value: 'true', label: 'Не равно'}
+    ]
 
     // Фильтрация выбора доп параметра только единажды
+    const [selectedAdditionalParams, setSelectedAdditionalParams] = useState({})
+    const [visibleAddParamsOptions, setVisibleAddParamsOptions] = useState([])
+
+    const {additionalParams: params} = getValues()
+
     useEffect(() => {
-        const selectedAddValues = Object.keys(selectedAdditinalParams).map(key => selectedAdditinalParams[key])
+        Object.keys(params || {}).map(p => {
+            setSelectedAdditionalParams({
+                ...selectedAdditionalParams,
+                [p]: params[p].name
+            })
+        })
+    }, [params])
+
+    useEffect(() => {
+        const selectedAddValues = Object.keys(selectedAdditionalParams).map(key => selectedAdditionalParams[key])
 
         let visibleAddParamsOptions = additionalParamsOptions.map(item => {
             if (item.value === '') {
@@ -267,12 +332,12 @@ const Index = () => {
         })
         setVisibleAddParamsOptions(visibleAddParamsOptions.filter(param => param !== undefined))
 
-    }, [selectedAdditinalParams])
+    }, [selectedAdditionalParams])
 
     const canStandartForm = userData?.Capabilities[0].CanStandartForm === 'true'
 
     if (isFetching) {
-        return  <Preloader/>
+        return <Preloader/>
     }
 
     return (
@@ -284,7 +349,30 @@ const Index = () => {
                     <TitlePage title="Поиск записей" isSearch={true} getFormValues={getValues}/>
                     <form onSubmit={handleSubmit(onSubmit)} className={styles.main} id="main-form">
                         <div className={`${styles.main__item} ${styles.main__item_50p}`}>
-                            <h3>Временной диапазон</h3>
+                            <div style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                whiteSpace: "nowrap",
+                            }}>
+                                <h3>Временной диапазон</h3>
+                                <Controller name='timeRange'
+                                            control={control}
+                                            render={({field: {onChange, value}}) => (
+                                                <Select
+                                                    options={possibleDateOptions}
+                                                    instanceId="timeRange"
+                                                    defaultValue={possibleDateOptions[0]}
+                                                    styles={selectDateOptions}
+                                                    components={selectComponents}
+                                                    value={possibleDateOptions.find(c => c.value === value)}
+                                                    onChange={e => {
+                                                        setTimeRange(selectTimeRange(e.value))
+                                                        onChange(e.value)
+                                                    }}
+                                                />)}
+                                />
+                            </div>
                             <div>
                                 <input type="datetime-local"
                                        {...register('starttime')}
@@ -423,55 +511,57 @@ const Index = () => {
                                 {additionalParams.map((param, index) => {
                                     return (
                                         <div key={param.id} className={styles.additionalParam}>
-                                            <Controller name={`additionalParams.p_${index + 1}.name`}
+                                            <Controller name={`additionalParams.p_${param.id}.name`}
                                                         control={control}
                                                         render={({field: {onChange, value}}) => (
                                                             <Select
                                                                 className={styles.additionalParam__name}
                                                                 options={visibleAddParamsOptions}
-                                                                instanceId={`param` + index}
+                                                                instanceId={`param` + param.id}
                                                                 placeholder='Введите параметр'
                                                                 styles={selectStyles}
                                                                 components={selectComponents}
                                                                 theme={selectTheme}
-                                                                value={visibleAddParamsOptions.find(c => c.value === value)}
+                                                                value={visibleAddParamsOptions.find(c => c.value === value)
+                                                                    ? visibleAddParamsOptions.find(c => c.value === value)
+                                                                    : additionalParamsOptions.find(c => c.value === value)
+                                                                }
                                                                 onChange={val => {
                                                                     onChange(val.value)
-                                                                    setSelectedAdditinalParams({
-                                                                        ...selectedAdditinalParams,
-                                                                        [`p_${index + 1}`]: val.value
+                                                                    setSelectedAdditionalParams({
+                                                                        ...selectedAdditionalParams,
+                                                                        [`p_${param.id}`]: val.value
                                                                     })
                                                                 }}
                                                             />
                                                         )}
                                             />
-                                            <Controller name={`additionalParams.p_${index + 1}.not`}
+                                            <Controller name={`additionalParams.p_${param.id}.not`}
                                                         control={control}
                                                         render={({field: {onChange, value}}) => (
                                                             <Select
                                                                 className={styles.additionalParam__not}
-                                                                options={[
-                                                                    {value: 'false', label: 'Равно'},
-                                                                    {value: 'true', label: 'Не равно'}
-                                                                ]}
-                                                                defaultValue={{value: 'false', label: 'Равно'}}
-                                                                instanceId={`param` + index}
+                                                                options={notOptions}
+                                                                value={notOptions.find(c => c.value === value)}
+                                                                defaultValue={notOptions[0]}
+                                                                instanceId={`param` + param.id}
                                                                 styles={selectStyles}
                                                                 components={selectComponents}
                                                                 theme={selectTheme}
-                                                                // value={additionalParamsOptions.find(c => c.value === value)}
-                                                                onChange={val => onChange(val.value)}
+                                                                onChange={val => {
+                                                                    onChange(val.value)
+                                                                }}
                                                             />
                                                         )}
                                             />
-                                            <input type="text" {...register(`additionalParams.p_${index + 1}.value`)}
+                                            <input type="text" {...register(`additionalParams.p_${param.id}.value`)}
                                                    placeholder='Введите значение'
                                                    className={styles.additionalParam__value}
                                             />
-                                            {!!index && <FontAwesomeIcon icon={faTrashCan}
-                                                                         className={styles.additionalParam__delete}
-                                                                         onClick={() => deleteAdditionalParam(param.id)}
-                                            />}
+                                            {param.id > 1 &&
+                                                <FontAwesomeIcon icon={faTrashCan}
+                                                                 className={styles.additionalParam__delete}
+                                                                 onClick={() => deleteAdditionalParam(param.id)}/>}
                                         </div>
                                     )
                                 })}

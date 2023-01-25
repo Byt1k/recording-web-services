@@ -81,5 +81,9 @@
       @extend %btnFill;
       width: 145px;
     }
+
+    &__cancel {
+      @extend %btnOutline;
+    }
   }
 }

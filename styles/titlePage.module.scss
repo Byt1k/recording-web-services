@@ -150,6 +150,10 @@
         font-weight: 600;
         margin-top: 4px;
       }
+
+      > label:has(>input[disabled]) {
+        color: #a1a1a1;
+      }
     }
   }
 }

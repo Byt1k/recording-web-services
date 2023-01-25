@@ -4,10 +4,12 @@ import Cookies, { parseCookies } from "nookies";
 import axios from "axios";
 import { recordingsApi } from "./recordings";
 import * as https from "https";
+import {filtersApi} from "./filters";
 
 export type ApiReturnType = {
     auth: ReturnType<typeof authApi>,
     recordings: ReturnType<typeof recordingsApi>
+    filters: ReturnType<typeof filtersApi>
 }
 
 const httpsAgent = new https.Agent({
@@ -46,6 +48,7 @@ export const Api = (ctx?: NextPageContext | GetServerSidePropsContext): ApiRetur
 
     return {
         auth: authApi(instance),
-        recordings: recordingsApi(instance)
+        recordings: recordingsApi(instance),
+        filters: filtersApi(instance)
     }
 }

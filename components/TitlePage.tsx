@@ -6,6 +6,7 @@ import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
 import modalStyles from "../styles/modal.module.scss";
 import {useForm} from "react-hook-form";
+import {Api} from "../api";
 
 interface PropsType {
     title: string,
@@ -39,9 +40,14 @@ const TitlePage: React.FC<PropsType> = ({
             filterType: 'private'
         }
     })
-    // todo: пока не работает (ждём бэк)
-    const saveFilter = ({filterName, filterType}) => {
+
+    const [isSubmiting, setIsSubmiting] = useState(false)
+
+    const saveFilter = async ({filterName, filterType}) => {
+        setIsSubmiting(true)
+
         const formValues = getFormValues()
+
         let data = {filterName, filterType, ...formValues}
         Object.keys(formValues.metadataQuery).map(key => {
             data = {
@@ -51,9 +57,24 @@ const TitlePage: React.FC<PropsType> = ({
         })
         delete data.metadataQuery
 
-        alert(JSON.stringify(data))
+        let currentFilters = []
+
+        try {
+            currentFilters = await Api().filters.getFilters()
+        } catch (e) {
+            console.log(e)
+        }
+
+        try {
+            await Api().filters.setFilters([
+                ...currentFilters, {...data, filterName, filterType, id: new Date().getTime()}
+            ])
+        } catch (e) {
+            console.log(e)
+        }
 
         reset()
+        setIsSubmiting(false)
         setPopupSaveFilter(false)
     }
 
@@ -117,14 +138,14 @@ const TitlePage: React.FC<PropsType> = ({
                                 Личный
                             </label>
                             <label>
-                                <input {...register('filterType')} type="radio" value="public"/>
+                                <input {...register('filterType')} disabled={true} type="radio" value="public"/>
                                 Общий
                             </label>
                         </div>
                     </div>
                     <div className={`${modalStyles.modal__content__action} ${modalStyles.modal__content_blue}`}>
                         <button onClick={() => setPopupSaveFilter(false)} type="button">Отменить</button>
-                        <button className={modalStyles.positive} type="submit">Сохранить</button>
+                        <button className={modalStyles.positive} type="submit" disabled={isSubmiting}>Сохранить</button>
                     </div>
                 </form>
             </Modal>

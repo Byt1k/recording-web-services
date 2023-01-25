@@ -3,11 +3,17 @@ import Header from "../components/Header";
 import {useAppSelector} from "../redux/hooks";
 import {selectAuthUserData} from "../redux/slices/auth";
 import dateToString from "../utils/dateToString";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
+import {Api} from "../api";
 
 const Filters = () => {
+    const router = useRouter()
+    const userData = useAppSelector(selectAuthUserData)
 
+    const businessAttributes = userData?.BusinessAttributes[0]
+
+    // Основные поля
     const fields = {
         filterName: "Название фильтра",
         starttime: "Дата начала",
@@ -25,46 +31,29 @@ const Filters = () => {
         externalDN: "Номер клиента",
         localDN: "Номер агента",
         username: "Агент",
-        CustomerType: "Тип клиента"
+        CustomerType: "Тип клиента",
     }
 
-    const response = [
-        {
-            id: 1,
-            filterName: "Фильр №1",
-            starttime: "2022-12-14T14:07",
-            stoptime: "2022-12-17T14:07",
-            minDuration: '5',
-            maxDuration: '20',
-            mediatype: 'voice',
-            type: 'Inbound',
-            externalDN: '9999',
-            localDN: '1007',
-            username: 'Agent007',
-            // Метадата
-            Project: 'Project2022',
-            businessResult: 'Sucess',
-            serviceType: 'Marketing',
-            serviceName: 'BigSales',
-            serviceTask: 'SalesForThisYear',
-            caseId: '54545',
-            CustomerType: 'Gold'
-        },
-        {
-            id: 2,
-            filterName: "Фильр №2",
-            starttime: "2022-12-01T03:00",
-            username: 'Agent007',
-        },
-        {
-            id: 3,
-            filterName: "Для поиска зависимых записей",
-            starttime: "2022-12-28T12:10",
-            stoptime: '2022-12-28T12:17',
-        }
-    ]
+    // Доп поля
+    const additionalFields = {}
+    userData?.AdditionalSearchMetadata.map(key => (
+        additionalFields[key] = businessAttributes[key]
+    ))
 
-    const filters = response.map(item => (
+    const [response, setResponse] = useState([])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setResponse(await Api().filters.getFilters())
+            } catch (e) {
+                console.log(e)
+            }
+        }
+        fetchData()
+    }, [])
+
+    const filters = response?.map(item => (
         {
             ...item,
             starttime: dateToString(item.starttime),
@@ -72,36 +61,44 @@ const Filters = () => {
         }
     ))
 
-    const router = useRouter()
-    const userData = useAppSelector(selectAuthUserData)
     const metadataKeys = userData?.StandardSearchMetadata
 
     const [selectedFilterId, setSelectedFilterId] = useState(null)
 
     const selectFilter = () => {
-        if (selectedFilterId) {
-            let filter = response.filter(f => f.id === selectedFilterId)[0]
-            Object.keys(filter).map(key => {
-                if (metadataKeys?.some(item => item === key)) {
-                    filter = {
-                        ...filter,
-                        ['metadataQuery.' + key]: filter[key]
-                    }
-                    delete filter[key]
+        let filter = response.filter(f => f.id === selectedFilterId)[0]
+        Object.keys(filter).map(key => {
+            if (metadataKeys?.some(item => item === key)) {
+                filter = {
+                    ...filter,
+                    ['metadataQuery.' + key]: filter[key]
                 }
-            })
+                delete filter[key]
+            }
+        })
 
-            localStorage.setItem('formValues', JSON.stringify(filter))
-            router.push('/')
+        localStorage.setItem('formValues', JSON.stringify(filter))
+        router.push('/')
+    }
+
+    const deleteFilter = async () => {
+        const newFilters = response.filter(filter => filter.id !== selectedFilterId)
+        try {
+            await Api().filters.setFilters(newFilters)
+            setResponse(await Api().filters.getFilters())
+            setSelectedFilterId(null)
+        } catch (e) {
+            console.log(e)
         }
     }
 
     return (
         <>
-            <Header isFiltersPage={true} selectFilter={selectFilter}/>
+            <Header isFiltersPage={true} selectFilter={selectFilter}
+                    deleteFilter={deleteFilter} isFilterSelected={!!selectedFilterId}/>
             <div className={`${styles.filtersPage} ${styles.container}`}>
-                <h2>Сохраненные фильтры</h2>
-                <div className={styles.tableContainer}>
+                <h2>{response.length ? 'Сохраненные фильтры' : 'Сохраненных фильтров нет'}</h2>
+                {!!response.length && <div className={styles.tableContainer}>
                     <table className={styles.filters}>
                         <thead>
                         <tr>
@@ -111,10 +108,19 @@ const Filters = () => {
                                     <button>{fields[key]}</button>
                                 </td>
                             ))}
+                            {Object.keys(additionalFields || {}).map(key => (
+                                <td key={key}>
+                                    <button>{additionalFields[key]}</button>
+                                </td>
+                            ))}
                         </tr>
                         </thead>
                         <tbody>
                         {filters.map(f => {
+
+                            // Преобразование объекта доп параметров
+                            const additionalParams = Object.keys(f.additionalParams || {}).map(key => f.additionalParams[key])
+
                             return (
                                 <tr key={f.id} onClick={() => setSelectedFilterId(f.id)}>
                                     <td>
@@ -126,12 +132,24 @@ const Filters = () => {
                                     {Object.keys(fields || {}).map(key => (
                                         <td key={key}>{f[key]}</td>
                                     ))}
+                                    {Object.keys(additionalFields || {}).map(field => {
+                                        const param = additionalParams.find(item => item.name === field)
+
+                                        if (!!param) {
+                                            return <td key={field}
+                                                       className={param.not === 'true' ? styles.not : null}>
+                                                {param.value}
+                                            </td>
+                                        }
+                                        return <td key={field}/>
+                                    })}
                                 </tr>
                             )
                         })}
                         </tbody>
                     </table>
                 </div>
+                }
             </div>
         </>
     );

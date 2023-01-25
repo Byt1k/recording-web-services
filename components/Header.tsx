@@ -16,19 +16,23 @@ type HeaderProps = {
     isSearchAction?: boolean,
     isInteraction?: boolean,
     setPopupResetFilter?: (value: boolean) => void,
-    selectFilter?: () => void
+    selectFilter?: () => void,
+    deleteFilter?: () => void,
+    isFilterSelected?: boolean
 }
 
 const Header: React.FC<HeaderProps> = ({
                                            isFiltersPage = false, isSearchAction = false,
-                                           isInteraction = false, setPopupResetFilter, selectFilter
+                                           isInteraction = false, setPopupResetFilter, selectFilter,
+                                           deleteFilter, isFilterSelected
                                        }) => {
     const [exitIsActive, setExitIsActive] = useState(false)
 
     const userData = useAppSelector(selectAuthUserData)
 
     const [popupExit, setPopupExit] = useState(false)
-    const [popupDelete, setPopupDelete] = useState(false)
+    const [popupDeleteRecording, setPopupDeleteRecording] = useState(false)
+    const [popupDeleteFilter, setPopupDeleteFilter] = useState(false)
 
     const exitModalRef = useRef(null)
     const exitModalBtnRef = useRef(null)
@@ -74,12 +78,12 @@ const Header: React.FC<HeaderProps> = ({
     const deleteRecording = async (recordingId) => {
         try {
             await Api().recordings.deleteRecording(recordingId)
-            setPopupDelete(false)
+            setPopupDeleteRecording(false)
             setRecordingDeletedPopup(true)
             dispatch(setIsPlaying({recordid: null, isPlaying: false}))
             dispatch(setRecordingDetail(null))
             // Обновление списка записей
-            dispatch(setRecordings({items : items.filter(r => r.recordid !== recordingId)}))
+            dispatch(setRecordings({items: items.filter(r => r.recordid !== recordingId)}))
         } catch (e) {
             console.log(e)
         }
@@ -125,11 +129,23 @@ const Header: React.FC<HeaderProps> = ({
                                 Найти
                             </button>
                         </>}
-                        {isFiltersPage && <button className={styles.header__action__find}
-                                                  onClick={selectFilter}>Выбрать фильтр</button>}
+                        {isFiltersPage && <>
+                            <Link href="/" className={styles.header__action__cancel}>Отмена</Link>
+                            {isFilterSelected && <>
+                                <button className={styles.header__action__reset}
+                                        onClick={() => setPopupDeleteFilter(true)}
+                                >
+                                    <img src="/reset.svg" alt="reset"/>
+                                    Удалить фильтр
+                                </button>
+                                <button className={styles.header__action__find}
+                                        onClick={selectFilter}>Выбрать фильтр
+                                </button>
+                            </>}
+                        </>}
                         {isInteraction && userData?.Capabilities[0].CanDelete === "true" &&
                             <button className={styles.header__action__reset}
-                                    onClick={() => setPopupDelete(true)}>
+                                    onClick={() => setPopupDeleteRecording(true)}>
                                 <img src="/reset.svg" alt="reset"/>
                                 Удалить запись
                             </button>}
@@ -142,10 +158,23 @@ const Header: React.FC<HeaderProps> = ({
                     <button className={modalStyles.negative} onClick={exit}>Выйти</button>
                 </div>
             </Modal>
-            <Modal active={popupDelete} setActive={setPopupDelete} title='Удалить запись?'
+            <Modal active={popupDeleteFilter} setActive={setPopupDeleteFilter} title='Удалить фильтр?'
+                   text='Вы хотите удалить выбранный фильтр.'>
+                <div className={modalStyles.modal__content__action}>
+                    <button onClick={() => setPopupDeleteFilter(false)}>Отменить</button>
+                    <button className={modalStyles.negative}
+                            onClick={() => {
+                                const status = deleteFilter()
+                                setPopupDeleteFilter(false)
+                            }}>
+                        Удалить
+                    </button>
+                </div>
+            </Modal>
+            <Modal active={popupDeleteRecording} setActive={setPopupDeleteRecording} title='Удалить запись?'
                    text='Вы хотите удалить текущую запись.'>
                 <div className={modalStyles.modal__content__action}>
-                    <button onClick={() => setPopupDelete(false)}>Отменить</button>
+                    <button onClick={() => setPopupDeleteRecording(false)}>Отменить</button>
                     <button className={modalStyles.negative} onClick={() => deleteRecording(router.query.id)}>
                         Удалить
                     </button>
